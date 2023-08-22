@@ -1,5 +1,5 @@
 import useMemo from 'rc-util/lib/hooks/useMemo';
-import shallowEqual from 'shallowequal';
+import isEqual from 'rc-util/lib/isEqual';
 import type { OverrideToken } from '../../theme/interface';
 import type { ThemeConfig } from '../context';
 import { defaultConfig } from '../../theme/internal';
@@ -12,7 +12,7 @@ export default function useTheme(
   const parentThemeConfig: ThemeConfig =
     themeConfig.inherit === false || !parentTheme ? defaultConfig : parentTheme;
 
-  const mergedTheme = useMemo<ThemeConfig | undefined>(
+  return useMemo<ThemeConfig | undefined>(
     () => {
       if (!theme) {
         return parentTheme;
@@ -47,9 +47,7 @@ export default function useTheme(
       prev.some((prevTheme, index) => {
         const nextTheme = next[index];
 
-        return !shallowEqual(prevTheme, nextTheme);
+        return !isEqual(prevTheme, nextTheme, true);
       }),
   );
-
-  return mergedTheme;
 }

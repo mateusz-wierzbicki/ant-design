@@ -2,7 +2,8 @@
 category: Components
 group: Data Display
 title: Tree
-cover: https://gw.alipayobjects.com/zos/alicdn/Xh-oWqg9k/Tree.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*Ag9_Q6ArswEAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*1GeUQJPTGUYAAAAAAAAAAAAADrJ8AQ/original
 demo:
   cols: 2
 ---
@@ -28,8 +29,11 @@ Almost anything can be represented in a tree structure. Examples include directo
 <code src="./demo/virtual-scroll.tsx">Virtual scroll</code>
 <code src="./demo/drag-debug.tsx" debug>Drag Debug</code>
 <code src="./demo/big-data.tsx" debug>Big data</code>
+<code src="./demo/block-node.tsx">Block Node</code>
 
 ## API
+
+Common props ref：[Common props](/docs/react/common-props)
 
 ### Tree props
 
@@ -56,10 +60,9 @@ Almost anything can be represented in a tree structure. Examples include directo
 | loadData | Load data asynchronously | function(node) | - |  |
 | loadedKeys | (Controlled) Set loaded tree nodes. Need work with `loadData` | string\[] | \[] |  |
 | multiple | Allows selecting multiple treeNodes | boolean | false |  |
-| rootClassName | ClassName on the root element | string | - | 4.20.0 |
 | rootStyle | Style on the root element | CSSProperties | - | 4.20.0 |
 | selectable | Whether can be selected | boolean | true |  |
-| selectedKeys | (Controlled) Specifies the keys of the selected treeNodes | string\[] | - |  |
+| selectedKeys | (Controlled) Specifies the keys of the selected treeNodes, multiple selection needs to set `multiple` to true | string\[] | - |  |
 | showIcon | Shows the icon before a TreeNode's title. There is no default style; you must set a custom style for it if set to true | boolean | false |  |
 | showLine | Shows a connecting line | boolean \| {showLeafIcon: boolean \| ReactNode \| ((props: AntTreeNodeProps) => ReactNode)} | false |  |
 | switcherIcon | Customize collapse/expand icon of tree node | ReactNode \| ((props: AntTreeNodeProps) => ReactNode) | - | renderProps: 4.20.0 |
@@ -105,7 +108,7 @@ Before `3.4.0`: The number of treeNodes can be very large, but when `checkable=t
 {
   this.state.treeData.length ? (
     <Tree>
-      {this.state.treeData.map(data => (
+      {this.state.treeData.map((data) => (
         <TreeNode />
       ))}
     </Tree>
@@ -120,6 +123,10 @@ Before `3.4.0`: The number of treeNodes can be very large, but when `checkable=t
 | Name | Description |
 | --- | --- |
 | scrollTo({ key: string \| number; align?: 'top' \| 'bottom' \| 'auto'; offset?: number }) | Scroll to key item in virtual scroll |
+
+## Design Token
+
+<ComponentTokenTable component="Transfer"></ComponentTokenTable>
 
 ## FAQ
 

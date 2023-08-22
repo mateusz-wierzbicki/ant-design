@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 import * as React from 'react';
-import { ConfigContext } from '../config-provider';
 import type { PresetColorType } from '../_util/colors';
+import { isPresetColor } from '../_util/colors';
 import type { LiteralUnion } from '../_util/type';
+import { ConfigContext } from '../config-provider';
 import useStyle from './style';
-import { isPresetColor } from './utils';
 
 type RibbonPlacement = 'start' | 'end';
 
@@ -13,23 +13,24 @@ export interface RibbonProps {
   prefixCls?: string;
   style?: React.CSSProperties; // style of ribbon element, not the wrapper
   text?: React.ReactNode;
-  color?: LiteralUnion<PresetColorType, string>;
+  color?: LiteralUnion<PresetColorType>;
   children?: React.ReactNode;
   placement?: RibbonPlacement;
 }
 
-const Ribbon: React.FC<RibbonProps> = function Ribbon({
-  className,
-  prefixCls: customizePrefixCls,
-  style,
-  color,
-  children,
-  text,
-  placement = 'end',
-}) {
+const Ribbon: React.FC<RibbonProps> = (props) => {
+  const {
+    className,
+    prefixCls: customizePrefixCls,
+    style,
+    color,
+    children,
+    text,
+    placement = 'end',
+  } = props;
   const { getPrefixCls, direction } = React.useContext(ConfigContext);
   const prefixCls = getPrefixCls('ribbon', customizePrefixCls);
-  const colorInPreset = isPresetColor(color);
+  const colorInPreset = isPresetColor(color, false);
   const ribbonCls = classNames(
     prefixCls,
     `${prefixCls}-placement-${placement}`,
@@ -56,5 +57,9 @@ const Ribbon: React.FC<RibbonProps> = function Ribbon({
     </div>,
   );
 };
+
+if (process.env.NODE_ENV !== 'production') {
+  Ribbon.displayName = 'Ribbon';
+}
 
 export default Ribbon;

@@ -58,4 +58,65 @@ describe('FloatButtonGroup', () => {
     fireEvent.mouseLeave(container.querySelector('.ant-float-btn-group')!);
     expect(onOpenChange).toHaveBeenCalled();
   });
+  it('support click floatButtonGroup not close', () => {
+    const onOpenChange = jest.fn();
+    const { container } = render(
+      <FloatButton.Group trigger="click" onOpenChange={onOpenChange}>
+        <FloatButton />
+        <FloatButton />
+        <FloatButton />
+      </FloatButton.Group>,
+    );
+    fireEvent.click(container.querySelector('.ant-float-btn')!);
+    fireEvent.click(container.querySelector('.ant-float-btn-group')!);
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+  });
+  it('support click out auto close', () => {
+    const onOpenChange = jest.fn();
+    const { container } = render(
+      <FloatButton.Group trigger="click" onOpenChange={onOpenChange}>
+        <FloatButton />
+        <FloatButton />
+        <FloatButton />
+      </FloatButton.Group>,
+    );
+    fireEvent.click(container.querySelector('.ant-float-btn')!);
+    fireEvent.click(container);
+    expect(onOpenChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('warning if set `open` but not set `trigger`', () => {
+    const warnSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(
+      <FloatButton.Group open trigger="click">
+        <FloatButton />
+        <FloatButton />
+      </FloatButton.Group>,
+    );
+
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    render(
+      <FloatButton.Group open>
+        <FloatButton />
+        <FloatButton />
+      </FloatButton.Group>,
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Warning: [antd: FloatButton.Group] `open` need to be used together with `trigger`',
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('menu should support badge', () => {
+    const { container } = render(
+      <FloatButton.Group trigger="click" badge={{ dot: true }}>
+        <FloatButton />
+        <FloatButton />
+      </FloatButton.Group>,
+    );
+
+    expect(container.querySelector('.ant-badge')).toBeTruthy();
+  });
 });

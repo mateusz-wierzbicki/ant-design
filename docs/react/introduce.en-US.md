@@ -8,20 +8,8 @@ Following the Ant Design specification, we developed a React UI library `antd` t
 <div class="pic-plus">
   <img width="150" src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg" />
   <span>+</span>
- <img width="160" src="https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg" />
+  <img width="160" src="https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg" />
 </div>
-
-<style>
-.pic-plus > * {
-  display: inline-block !important;
-  vertical-align: middle;
-}
-.pic-plus span {
-  margin: 0 20px;
-  color: #aaa;
-  font-size: 30px;
-}
-</style>
 
 ---
 
@@ -56,17 +44,11 @@ You can subscribe to this feed for new version notifications: https://github.com
 
 ## Installation
 
-### Using npm or yarn
+### Using npm or yarn or pnpm
 
-**We recommend using npm or yarn to install**, it not only makes development easier, but also allow you to take advantage of the rich ecosystem of Javascript packages and tooling.
+**We recommend using [npm](https://www.npmjs.com/) or [yarn](https://github.com/yarnpkg/yarn/) or [pnpm](https://pnpm.io/) to install**, it not only makes development easier, but also allow you to take advantage of the rich ecosystem of Javascript packages and tooling.
 
-```bash
-$ npm install antd
-```
-
-```bash
-$ yarn add antd
-```
+<InstallDependencies npm='$ npm install antd --save' yarn='$ yarn add antd' pnpm='$ pnpm install antd --save'></InstallDependencies>
 
 If you are in a bad network environment, you can try other registries and tools like [cnpm](https://github.com/cnpm/cnpm).
 
@@ -83,6 +65,7 @@ We provide `antd.js` and `antd.min.js` `reset.css` under [dist](https://unpkg.co
 ## Usage
 
 ```jsx
+import React from 'react';
 import { DatePicker } from 'antd';
 
 const App = () => {
@@ -94,7 +77,7 @@ export default App;
 
 ### Use modularized antd
 
-`antd` supports ES modules tree shaking by default for JS part.
+`antd` supports ES modules tree shaking by default.
 
 ### TypeScript
 
@@ -106,18 +89,17 @@ export default App;
 - [China Mirrors](https://github.com/ant-design/ant-design/issues/25661)
 - [Components](/components/overview)
 - [Ant Design Pro](https://pro.ant.design/)
+- [Ant Design Pro Components](https://procomponents.ant.design/)
 - [Ant Design Charts](https://charts.ant.design)
 - [Change Log](/changelog)
-- [rc-components](http://react-component.github.io/)
-- [Mobile UI](http://mobile.ant.design)
+- [rc-components](https://react-component.github.io/)
+- [Mobile Components](https://mobile.ant.design)
+- [Mini Program Components](https://mini.ant.design)
 - [Ant Design Icons](https://github.com/ant-design/ant-design-icons)
 - [Ant Design Colors](https://github.com/ant-design/ant-design-colors)
-- [Ant Design Pro Layout](https://github.com/ant-design/ant-design-pro-layout)
-- [Ant Design Pro Blocks](https://github.com/ant-design/pro-blocks)
-- [Dark Theme](https://github.com/ant-design/ant-design-dark-theme)
 - [Landing Pages](https://landing.ant.design)
 - [Motion](https://motion.ant.design)
-- [Scaffold Market](http://scaffold.ant.design)
+- [Scaffold Market](https://scaffold.ant.design)
 - [Developer Instruction](https://github.com/ant-design/ant-design/wiki/Development)
 - [Versioning Release Note](https://github.com/ant-design/ant-design/wiki/%E8%BD%AE%E5%80%BC%E8%A7%84%E5%88%99%E5%92%8C%E7%89%88%E6%9C%AC%E5%8F%91%E5%B8%83%E6%B5%81%E7%A8%8B)
 - [FAQ](/docs/react/faq)
@@ -128,13 +110,13 @@ export default App;
 
 ## Companies using antd
 
-- [Ant Financial](http://www.antfin.com/index.htm?locale=en_US)
-- [Alibaba](http://www.alibaba.com/)
-- [Tencent](http://www.tencent.com)
-- [Baidu](http://www.baidu.com)
-- [Koubei](http://www.koubei.com/)
-- [Meituan](http://www.meituan.com)
-- [Didi](http://www.xiaojukeji.com/)
+- [Ant Group](https://www.antgroup.com/index.htm?locale=en_US)
+- [Alibaba](https://www.alibaba.com/)
+- [Tencent](https://www.tencent.com)
+- [Baidu](https://www.baidu.com)
+- [Koubei](https://www.koubei.com/)
+- [Meituan](https://www.meituan.com)
+- [Didi](https://www.xiaojukeji.com/)
 - [Eleme](https://www.ele.me/)
 
 > If your company or product uses Ant Design, let us know [here](https://github.com/ant-design/ant-design/issues/477)!

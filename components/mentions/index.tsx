@@ -1,19 +1,23 @@
+'use client';
+
 import classNames from 'classnames';
 import RcMentions from 'rc-mentions';
 import type {
+  DataDrivenOptionProps as MentionsOptionProps,
   MentionsProps as RcMentionsProps,
   MentionsRef as RcMentionsRef,
 } from 'rc-mentions/lib/Mentions';
 import { composeRef } from 'rc-util/lib/ref';
 // eslint-disable-next-line import/no-named-as-default
 import * as React from 'react';
-import { ConfigContext } from '../config-provider';
-import defaultRenderEmpty from '../config-provider/defaultRenderEmpty';
-import { FormItemInputContext } from '../form/context';
 import genPurePanel from '../_util/PurePanel';
-import Spin from '../spin';
 import type { InputStatus } from '../_util/statusUtils';
 import { getMergedStatus, getStatusClassNames } from '../_util/statusUtils';
+import warning from '../_util/warning';
+import { ConfigContext } from '../config-provider';
+import DefaultRenderEmpty from '../config-provider/defaultRenderEmpty';
+import { FormItemInputContext } from '../form/context';
+import Spin from '../spin';
 
 import useStyle from './style';
 
@@ -25,23 +29,23 @@ function loadingFilterOption() {
 
 export type MentionPlacement = 'top' | 'bottom';
 
+export type { DataDrivenOptionProps as MentionsOptionProps } from 'rc-mentions/lib/Mentions';
+
 export interface OptionProps {
   value: string;
   children: React.ReactNode;
   [key: string]: any;
 }
 
-export interface MentionProps extends RcMentionsProps {
+export interface MentionProps extends Omit<RcMentionsProps, 'suffix'> {
+  rootClassName?: string;
   loading?: boolean;
   status?: InputStatus;
+  options?: MentionsOptionProps[];
   popupClassName?: string;
 }
 
 export interface MentionsRef extends RcMentionsRef {}
-
-export interface MentionState {
-  focused: boolean;
-}
 
 interface MentionsConfig {
   prefix?: string | string[];
@@ -62,24 +66,43 @@ type CompoundedComponent = React.ForwardRefExoticComponent<
 };
 
 const InternalMentions: React.ForwardRefRenderFunction<MentionsRef, MentionProps> = (
-  {
+  props,
+  ref,
+) => {
+  const {
     prefixCls: customizePrefixCls,
     className,
+    rootClassName,
     disabled,
     loading,
     filterOption,
     children,
     notFoundContent,
+    options,
     status: customStatus,
     popupClassName,
+    style,
     ...restProps
-  },
-  ref,
-) => {
+  } = props;
   const [focused, setFocused] = React.useState(false);
-  const innerRef = React.useRef<MentionsRef>();
+  const innerRef = React.useRef<MentionsRef>(null);
   const mergedRef = composeRef(ref, innerRef);
-  const { getPrefixCls, renderEmpty, direction } = React.useContext(ConfigContext);
+
+  // =================== Warning =====================
+  if (process.env.NODE_ENV !== 'production') {
+    warning(
+      !children,
+      'Mentions',
+      '`Mentions.Option` is deprecated. Please use `options` instead.',
+    );
+  }
+
+  const {
+    getPrefixCls,
+    renderEmpty,
+    direction,
+    mentions: contextMentions,
+  } = React.useContext(ConfigContext);
   const {
     status: contextStatus,
     hasFeedback,
@@ -102,15 +125,14 @@ const InternalMentions: React.ForwardRefRenderFunction<MentionsRef, MentionProps
     setFocused(false);
   };
 
-  const getNotFoundContent = () => {
+  const notFoundContentEle = React.useMemo<React.ReactNode>(() => {
     if (notFoundContent !== undefined) {
       return notFoundContent;
     }
+    return renderEmpty?.('Select') || <DefaultRenderEmpty componentName="Select" />;
+  }, [notFoundContent, renderEmpty]);
 
-    return (renderEmpty || defaultRenderEmpty)('Select');
-  };
-
-  const getOptions = () => {
+  const mentionOptions = React.useMemo<React.ReactNode>(() => {
     if (loading) {
       return (
         <Option value="ANTD_SEARCHING" disabled>
@@ -118,16 +140,20 @@ const InternalMentions: React.ForwardRefRenderFunction<MentionsRef, MentionProps
         </Option>
       );
     }
-
     return children;
-  };
+  }, [loading, children]);
 
-  const getFilterOption = (): any => {
-    if (loading) {
-      return loadingFilterOption;
-    }
-    return filterOption;
-  };
+  const mergedOptions = loading
+    ? [
+        {
+          value: 'ANTD_SEARCHING',
+          disabled: true,
+          label: <Spin size="small" />,
+        },
+      ]
+    : options;
+
+  const mentionsfilterOption = loading ? loadingFilterOption : filterOption;
 
   const prefixCls = getPrefixCls('mentions', customizePrefixCls);
 
@@ -141,43 +167,33 @@ const InternalMentions: React.ForwardRefRenderFunction<MentionsRef, MentionProps
       [`${prefixCls}-rtl`]: direction === 'rtl',
     },
     getStatusClassNames(prefixCls, mergedStatus),
+    contextMentions?.className,
     !hasFeedback && className,
+    rootClassName,
     hashId,
   );
 
   const mentions = (
     <RcMentions
       prefixCls={prefixCls}
-      notFoundContent={getNotFoundContent()}
+      notFoundContent={notFoundContentEle}
       className={mergedClassName}
       disabled={disabled}
       direction={direction}
+      style={{ ...contextMentions?.style, ...style }}
       {...restProps}
-      filterOption={getFilterOption()}
+      filterOption={mentionsfilterOption}
       onFocus={onFocus}
       onBlur={onBlur}
-      dropdownClassName={classNames(popupClassName, hashId)}
-      ref={mergedRef as any}
+      dropdownClassName={classNames(popupClassName, rootClassName, hashId)}
+      ref={mergedRef}
+      options={mergedOptions}
+      suffix={hasFeedback && feedbackIcon}
+      classes={{ affixWrapper: classNames(hashId, className) }}
     >
-      {getOptions()}
+      {mentionOptions}
     </RcMentions>
   );
-
-  if (hasFeedback) {
-    return (
-      <div
-        className={classNames(
-          `${prefixCls}-affix-wrapper`,
-          getStatusClassNames(`${prefixCls}-affix-wrapper`, mergedStatus, hasFeedback),
-          className,
-          hashId,
-        )}
-      >
-        {mentions}
-        <span className={`${prefixCls}-suffix`}>{feedbackIcon}</span>
-      </div>
-    );
-  }
 
   return wrapSSR(mentions);
 };

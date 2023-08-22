@@ -1,10 +1,10 @@
-import useSiteToken from '../../../hooks/useSiteToken';
-import { Col, Row, Typography } from 'antd';
-import React from 'react';
-import { css } from '@emotion/react';
-import useLocale from '../../../hooks/useLocale';
+import React, { useContext } from 'react';
+import { createStyles, useTheme } from 'antd-style';
 import { Link, useLocation } from 'dumi';
+import { Col, Row, Typography } from 'antd';
+import useLocale from '../../../hooks/useLocale';
 import * as utils from '../../../theme/utils';
+import SiteContext from '../../../theme/slots/SiteContext';
 
 const SECONDARY_LIST = [
   {
@@ -60,11 +60,8 @@ const locales = {
   },
 };
 
-const useStyle = () => {
-  const { token } = useSiteToken();
-
-  return {
-    card: css`
+const useStyle = createStyles(({ token, css }) => ({
+  card: css`
       padding: ${token.paddingSM}px;
       border-radius: ${token.borderRadius * 2}px;
       background: #fff;
@@ -78,7 +75,7 @@ const useStyle = () => {
       }
     `,
 
-    cardMini: css`
+  cardMini: css`
       display: block;
       border-radius: ${token.borderRadius * 2}px;
       padding: ${token.paddingMD}px ${token.paddingLG}px;
@@ -89,15 +86,16 @@ const useStyle = () => {
         height: 48px;
       }
     `,
-  };
-};
+}));
 
 export default function DesignFramework() {
   const [locale] = useLocale(locales);
-  const { token } = useSiteToken();
-  const style = useStyle();
+  const token = useTheme();
+  const { styles } = useStyle();
   const { pathname, search } = useLocation();
   const isZhCN = utils.isZhCN(pathname);
+  const { isMobile } = useContext(SiteContext);
+  const colSpan = isMobile ? 24 : 8;
 
   const MAINLY_LIST = [
     {
@@ -124,9 +122,9 @@ export default function DesignFramework() {
         const desc = locale[`${key}Desc` as keyof typeof locale];
 
         return (
-          <Col key={index} span={8}>
+          <Col key={index} span={colSpan}>
             <Link to={path}>
-              <div css={style.card}>
+              <div className={styles.card}>
                 <img alt={title} src={img} />
 
                 <Typography.Title
@@ -149,8 +147,8 @@ export default function DesignFramework() {
         const desc = locale[`${key}Desc` as keyof typeof locale];
 
         return (
-          <Col key={index} span={8}>
-            <a css={style.cardMini} target="_blank" href={url}>
+          <Col key={index} span={colSpan}>
+            <a className={styles.cardMini} target="_blank" href={url} rel="noreferrer">
               <img alt={title} src={img} style={{ transform: `scale(${imgScale})` }} />
 
               <Typography.Title

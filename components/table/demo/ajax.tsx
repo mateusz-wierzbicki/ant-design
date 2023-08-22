@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import qs from 'qs';
 import { Table } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
-import qs from 'qs';
 
 interface DataType {
   name: {
@@ -53,7 +53,7 @@ const getRandomuserParams = (params: TableParams) => ({
 });
 
 const App: React.FC = () => {
-  const [data, setData] = useState();
+  const [data, setData] = useState<DataType[]>();
   const [loading, setLoading] = useState(false);
   const [tableParams, setTableParams] = useState<TableParams>({
     pagination: {
@@ -95,6 +95,11 @@ const App: React.FC = () => {
       filters,
       ...sorter,
     });
+
+    // `dataSource` is useless since `pageSize` changed
+    if (pagination.pageSize !== tableParams.pagination?.pageSize) {
+      setData([]);
+    }
   };
 
   return (

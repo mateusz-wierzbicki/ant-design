@@ -1,40 +1,51 @@
 import FilterFilled from '@ant-design/icons/FilterFilled';
 import classNames from 'classnames';
-import isEqual from 'lodash/isEqual';
 import type { FieldDataNode } from 'rc-tree';
+import isEqual from 'rc-util/lib/isEqual';
 import * as React from 'react';
-import type { MenuProps } from '../../../menu';
 import type { FilterState } from '.';
-import { flattenKeys } from '.';
+import useSyncState from '../../../_util/hooks/useSyncState';
+import warning from '../../../_util/warning';
 import Button from '../../../button';
 import type { CheckboxChangeEvent } from '../../../checkbox';
 import Checkbox from '../../../checkbox';
 import { ConfigContext } from '../../../config-provider/context';
 import Dropdown from '../../../dropdown';
 import Empty from '../../../empty';
+import type { MenuProps } from '../../../menu';
 import Menu from '../../../menu';
 import { OverrideProvider } from '../../../menu/OverrideContext';
 import Radio from '../../../radio';
 import type { EventDataNode } from '../../../tree';
 import Tree from '../../../tree';
-import useSyncState from '../../../_util/hooks/useSyncState';
 import type {
   ColumnFilterItem,
   ColumnType,
   FilterSearchType,
+  FilterValue,
   GetPopupContainer,
   Key,
   TableLocale,
 } from '../../interface';
 import FilterSearch from './FilterSearch';
 import FilterDropdownMenuWrapper from './FilterWrapper';
-import warning from '../../../_util/warning';
 
 type FilterTreeDataNode = FieldDataNode<{ title: React.ReactNode; key: React.Key }>;
 
 interface FilterRestProps {
   confirm?: Boolean;
   closeDropdown?: Boolean;
+}
+
+export function flattenKeys(filters?: ColumnFilterItem[]) {
+  let keys: FilterValue = [];
+  (filters || []).forEach(({ value, children }) => {
+    keys.push(value);
+    if (children) {
+      keys = [...keys, ...flattenKeys(children)];
+    }
+  });
+  return keys;
 }
 
 function hasSubMenu(filters: ColumnFilterItem[]) {
@@ -226,13 +237,13 @@ function FilterDropdown<RecordType>(props: FilterDropdownProps<RecordType>) {
   }, [visible]);
 
   // ======================= Submit ========================
-  const internalTriggerFilter = (keys: Key[] | undefined | null) => {
+  const internalTriggerFilter = (keys?: Key[]) => {
     const mergedKeys = keys && keys.length ? keys : null;
     if (mergedKeys === null && (!filterState || !filterState.filteredKeys)) {
       return null;
     }
 
-    if (isEqual(mergedKeys, filterState?.filteredKeys)) {
+    if (isEqual(mergedKeys, filterState?.filteredKeys, true)) {
       return null;
     }
 
@@ -276,7 +287,7 @@ function FilterDropdown<RecordType>(props: FilterDropdownProps<RecordType>) {
 
   const onVisibleChange = (newVisible: boolean) => {
     if (newVisible && propFilteredKeys !== undefined) {
-      // Sync filteredKeys on appear in controlled mode (propFilteredKeys !== undefiend)
+      // Sync filteredKeys on appear in controlled mode (propFilteredKeys !== undefined)
       setFilteredKeysSync(propFilteredKeys || []);
     }
 
@@ -339,7 +350,7 @@ function FilterDropdown<RecordType>(props: FilterDropdownProps<RecordType>) {
   } else if (column.filterDropdown) {
     dropdownContent = column.filterDropdown;
   } else {
-    const selectedKeys = (getFilteredKeysSync() || []) as any;
+    const selectedKeys = getFilteredKeysSync() || [];
     const getFilterComponent = () => {
       if ((column.filters || []).length === 0) {
         return (
@@ -425,7 +436,7 @@ function FilterDropdown<RecordType>(props: FilterDropdownProps<RecordType>) {
             className={dropdownMenuClass}
             onSelect={onSelectKeys}
             onDeselect={onSelectKeys}
-            selectedKeys={selectedKeys}
+            selectedKeys={selectedKeys as string[]}
             getPopupContainer={getPopupContainer}
             openKeys={openKeys}
             onOpenChange={onOpenChange}
@@ -447,6 +458,7 @@ function FilterDropdown<RecordType>(props: FilterDropdownProps<RecordType>) {
         return isEqual(
           (defaultFilteredValue || []).map((key) => String(key)),
           selectedKeys,
+          true,
         );
       }
 

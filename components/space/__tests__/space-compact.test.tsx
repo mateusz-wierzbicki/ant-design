@@ -4,13 +4,19 @@ import Space from '..';
 import mountTest from '../../../tests/shared/mountTest';
 import rtlTest from '../../../tests/shared/rtlTest';
 import { render } from '../../../tests/utils';
-import Input from '../../input';
-import Button from '../../button';
 import AutoComplete from '../../auto-complete';
+import Button from '../../button';
 import Cascader from '../../cascader';
+import ConfigProvider from '../../config-provider';
 import DatePicker from '../../date-picker';
+import Drawer from '../../drawer';
+import Dropdown from '../../dropdown';
+import Input from '../../input';
+import InputNumber from '../../input-number';
+import Modal from '../../modal';
 import Select from '../../select';
 import TimePicker from '../../time-picker';
+import Tooltip from '../../tooltip';
 import TreeSelect from '../../tree-select';
 
 describe('Space.Compact', () => {
@@ -151,6 +157,42 @@ describe('Space.Compact', () => {
     expect(container.querySelector('.ant-input')?.classList.contains('ant-input-sm')).toBe(true);
     expect(container.querySelector('.ant-btn')?.classList.contains('ant-btn-sm')).toBe(true);
   });
+  it('component size has a higher priority than Compact', () => {
+    const { container } = render(
+      <Space.Compact size="middle">
+        <Input size="small" />
+        <Select size="small" />
+        <Button size="small">Submit</Button>
+        <InputNumber size="small" />
+        <DatePicker size="small" />
+        <DatePicker.RangePicker size="small" />
+        <Cascader size="small" />
+        <TreeSelect size="small" />
+        <Input.Search size="small" />
+      </Space.Compact>,
+    );
+    expect(container.querySelector('.ant-input')?.classList.contains('ant-input-sm')).toBe(true);
+    expect(container.querySelector('.ant-select')?.classList.contains('ant-select-sm')).toBe(true);
+    expect(container.querySelector('.ant-btn')?.classList.contains('ant-btn-sm')).toBe(true);
+    expect(
+      container.querySelector('.ant-input-number')?.classList.contains('ant-input-number-sm'),
+    ).toBe(true);
+    expect(container.querySelector('.ant-picker')?.classList.contains('ant-picker-small')).toBe(
+      true,
+    );
+    expect(
+      container.querySelector('.ant-picker-range')?.classList.contains('ant-picker-small'),
+    ).toBe(true);
+    expect(container.querySelector('.ant-cascader')?.classList.contains('ant-select-sm')).toBe(
+      true,
+    );
+    expect(container.querySelector('.ant-tree-select')?.classList.contains('ant-select-sm')).toBe(
+      true,
+    );
+    expect(
+      container.querySelector('.ant-input-search')?.classList.contains('ant-input-search-small'),
+    ).toBe(true);
+  });
 
   it('direction=vertical', () => {
     const { container } = render(
@@ -181,5 +223,155 @@ describe('Space.Compact', () => {
         .querySelectorAll('.ant-btn')[3]
         ?.classList.contains('ant-btn-compact-vertical-last-item'),
     ).toBe(true);
+  });
+  it('context for Modal', () => {
+    render(
+      <Space.Compact size="small">
+        <Modal title="Basic Modal" open>
+          <Button>normal button A</Button>
+          <Input />
+        </Modal>
+      </Space.Compact>,
+    );
+    expect(
+      document.body
+        .querySelectorAll('.ant-modal')[0]
+        .querySelector('.ant-btn')
+        ?.classList.contains('ant-btn-compact-item'),
+    ).toBe(false);
+    expect(
+      document.body
+        .querySelectorAll('.ant-modal')[0]
+        .querySelector('.ant-input')
+        ?.classList.contains('ant-input-compact-item'),
+    ).toBe(false);
+  });
+  it('context for Dropdown', () => {
+    render(
+      <Space.Compact size="small">
+        <Dropdown.Button
+          open
+          menu={{
+            items: [
+              {
+                key: '1',
+                label: <Button>menu button</Button>,
+              },
+            ],
+          }}
+        >
+          debug Dropdown.Button context
+        </Dropdown.Button>
+      </Space.Compact>,
+    );
+    expect(
+      document.body
+        .querySelector('.ant-dropdown')
+        ?.querySelector('.ant-btn')
+        ?.classList.contains('ant-btn-compact-item'),
+    ).toBe(false);
+  });
+  it('context for Drawer', () => {
+    render(
+      <Space.Compact size="small">
+        <Drawer title="Basic Drawer" open>
+          <Button>normal button A</Button>
+        </Drawer>
+      </Space.Compact>,
+    );
+    expect(
+      document.body
+        .querySelector('.ant-drawer')
+        ?.querySelector('.ant-btn')
+        ?.classList.contains('ant-btn-compact-item'),
+    ).toBe(false);
+  });
+  it('context for Tooltip', () => {
+    render(
+      <Space.Compact>
+        <Input placeholder="Debug Popover context" />
+        <Tooltip
+          open
+          overlay={
+            <>
+              <Input placeholder="Left Border" />
+              <DatePicker />
+            </>
+          }
+          trigger={['click']}
+          placement="bottom"
+        >
+          <Button>Settings</Button>
+        </Tooltip>
+      </Space.Compact>,
+    );
+    expect(
+      document.body
+        .querySelector('.ant-tooltip')
+        ?.querySelector('.ant-input')
+        ?.classList.contains('ant-input-compact-item'),
+    ).toBe(false);
+    expect(
+      document.body
+        .querySelector('.ant-tooltip')
+        ?.querySelector('.ant-picker')
+        ?.classList.contains('ant-picker-compact-item'),
+    ).toBe(false);
+  });
+
+  it('Tooltip content supports function', () => {
+    render(
+      <Space.Compact>
+        <Input placeholder="Debug Popover context" />
+        <Tooltip
+          open
+          overlay={() => (
+            <>
+              <Input placeholder="Left Border" />
+              <DatePicker />
+            </>
+          )}
+        >
+          <span>Tooltip will show on mouse enter.</span>
+        </Tooltip>
+      </Space.Compact>,
+    );
+    expect(
+      document.body
+        .querySelector('.ant-tooltip')
+        ?.querySelector('.ant-input')
+        ?.classList.contains('ant-input-compact-item'),
+    ).toBe(false);
+    expect(
+      document.body
+        .querySelector('.ant-tooltip')
+        ?.querySelector('.ant-picker')
+        ?.classList.contains('ant-picker-compact-item'),
+    ).toBe(false);
+  });
+
+  // https://github.com/ant-design/ant-design/issues/41876
+  it('Space.Compact should inherit the size from ConfigProvider if the componentSize is set', () => {
+    const { container } = render(
+      <ConfigProvider componentSize="large">
+        <Space.Compact>
+          <Select placeholder="Select" />
+        </Space.Compact>
+      </ConfigProvider>,
+    );
+
+    expect(container.querySelectorAll('.ant-select-lg')).toHaveLength(1);
+  });
+
+  it('The size property of Space.Compact should have an higher priority over the componentSize property of ConfigProvider', () => {
+    const { container } = render(
+      <ConfigProvider componentSize="large">
+        <Space.Compact size="small">
+          <Select placeholder="Select" />
+        </Space.Compact>
+      </ConfigProvider>,
+    );
+
+    expect(container.querySelectorAll('.ant-select-sm')).toHaveLength(1);
   });
 });

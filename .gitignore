@@ -47,11 +47,15 @@ server/
 
 # Docs templates
 scripts/previewEditor/index.html
+components/version/version.ts
 components/version/version.tsx
-components/version/token.tsx
+components/version/token.json
+components/version/token-meta.json
 .dumi/tmp
 .dumi/tmp-test
 .dumi/tmp-production
+.dumi/preset/components-changelog*
+.dumi/preset/misc-changelog.json
 
 # Image snapshot diff
 __diff_output__/
@@ -61,3 +65,6 @@ __image_snapshots__/
 /imageDiffSnapshots
 
 .devcontainer*
+.husky/prepare-commit-msg
+
+.eslintcache

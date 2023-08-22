@@ -28,6 +28,10 @@ export default function genColorMapToken(
   const infoColors = generateColorPalettes(colorInfoBase);
   const neutralColors = generateNeutralColorPalettes(colorBgBase, colorTextBase);
 
+  // Color Link
+  const colorLink = seed.colorLink || seed.colorInfo;
+  const linkColors = generateColorPalettes(colorLink);
+
   return {
     ...neutralColors,
 
@@ -57,8 +61,8 @@ export default function genColorMapToken(
     colorErrorBgHover: errorColors[2],
     colorErrorBorder: errorColors[3],
     colorErrorBorderHover: errorColors[4],
-    colorErrorHover: errorColors[4],
-    colorError: errorColors[5],
+    colorErrorHover: errorColors[5],
+    colorError: errorColors[6],
     colorErrorActive: errorColors[7],
     colorErrorTextHover: errorColors[8],
     colorErrorText: errorColors[9],
@@ -85,6 +89,10 @@ export default function genColorMapToken(
     colorInfoTextHover: infoColors[8],
     colorInfoText: infoColors[9],
     colorInfoTextActive: infoColors[10],
+
+    colorLinkHover: linkColors[4],
+    colorLink: linkColors[6],
+    colorLinkActive: linkColors[7],
 
     colorBgMask: new TinyColor('#000').setAlpha(0.45).toRgbString(),
     colorWhite: '#fff',

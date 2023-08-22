@@ -5,19 +5,18 @@ import CloseOutlined from '@ant-design/icons/CloseOutlined';
 import classNames from 'classnames';
 import omit from 'rc-util/lib/omit';
 import * as React from 'react';
+import warning from '../_util/warning';
 import type { ConfigConsumerProps } from '../config-provider';
 import { ConfigContext } from '../config-provider';
-import { tuple } from '../_util/type';
-import warning from '../_util/warning';
 import Circle from './Circle';
 import Line from './Line';
 import Steps from './Steps';
-import { getSuccessPercent, validProgress } from './utils';
 import useStyle from './style';
+import { getSize, getSuccessPercent, validProgress } from './utils';
 
-const ProgressTypes = tuple('line', 'circle', 'dashboard');
-export type ProgressType = typeof ProgressTypes[number];
-const ProgressStatuses = tuple('normal', 'exception', 'active', 'success');
+export const ProgressTypes = ['line', 'circle', 'dashboard'] as const;
+export type ProgressType = (typeof ProgressTypes)[number];
+const ProgressStatuses = ['normal', 'exception', 'active', 'success'] as const;
 export type ProgressSize = 'default' | 'small';
 export type StringGradients = { [percentage: string]: string };
 type FromToGradients = { from: string; to: string };
@@ -30,34 +29,39 @@ export interface SuccessProps {
   strokeColor?: string;
 }
 
-export interface ProgressProps {
+export type ProgressAriaProps = Pick<React.AriaAttributes, 'aria-label' | 'aria-labelledby'>;
+
+export interface ProgressProps extends ProgressAriaProps {
   prefixCls?: string;
   className?: string;
+  rootClassName?: string;
   type?: ProgressType;
   percent?: number;
   format?: (percent?: number, successPercent?: number) => React.ReactNode;
-  status?: typeof ProgressStatuses[number];
+  status?: (typeof ProgressStatuses)[number];
   showInfo?: boolean;
   strokeWidth?: number;
   strokeLinecap?: 'butt' | 'square' | 'round';
   strokeColor?: string | string[] | ProgressGradient;
   trailColor?: string;
+  /** @deprecated Use `size` instead */
   width?: number;
   success?: SuccessProps;
   style?: React.CSSProperties;
   gapDegree?: number;
   gapPosition?: 'top' | 'bottom' | 'left' | 'right';
-  size?: ProgressSize;
+  size?: number | [number | string, number] | ProgressSize;
   steps?: number;
   /** @deprecated Use `success` instead */
   successPercent?: number;
   children?: React.ReactNode;
 }
 
-const Progress: React.FC<ProgressProps> = (props) => {
+const Progress = React.forwardRef<HTMLDivElement, ProgressProps>((props, ref) => {
   const {
     prefixCls: customizePrefixCls,
     className,
+    rootClassName,
     steps,
     strokeColor,
     percent = 0,
@@ -66,25 +70,30 @@ const Progress: React.FC<ProgressProps> = (props) => {
     type = 'line',
     status,
     format,
+    style,
     ...restProps
   } = props;
 
   const percentNumber = React.useMemo<number>(() => {
     const successPercent = getSuccessPercent(props);
     return parseInt(
-      successPercent !== undefined ? successPercent.toString() : percent.toString(),
+      successPercent !== undefined ? (successPercent ?? 0)?.toString() : (percent ?? 0)?.toString(),
       10,
     );
   }, [percent, props.success, props.successPercent]);
 
-  const progressStatus = React.useMemo<typeof ProgressStatuses[number]>(() => {
+  const progressStatus = React.useMemo<(typeof ProgressStatuses)[number]>(() => {
     if (!ProgressStatuses.includes(status!) && percentNumber >= 100) {
       return 'success';
     }
     return status || 'normal';
   }, [status, percentNumber]);
 
-  const { getPrefixCls, direction } = React.useContext<ConfigConsumerProps>(ConfigContext);
+  const {
+    getPrefixCls,
+    direction,
+    progress: progressStyle,
+  } = React.useContext<ConfigConsumerProps>(ConfigContext);
   const prefixCls = getPrefixCls('progress', customizePrefixCls);
   const [wrapSSR, hashId] = useStyle(prefixCls);
 
@@ -109,13 +118,16 @@ const Progress: React.FC<ProgressProps> = (props) => {
         {text}
       </span>
     );
-  }, [showInfo, percentNumber, progressStatus, type, prefixCls, format]);
+  }, [showInfo, percent, percentNumber, progressStatus, type, prefixCls, format]);
 
-  warning(
-    !('successPercent' in props),
-    'Progress',
-    '`successPercent` is deprecated. Please use `success.percent` instead.',
-  );
+  if (process.env.NODE_ENV !== 'production') {
+    warning(
+      !('successPercent' in props),
+      'Progress',
+      '`successPercent` is deprecated. Please use `success.percent` instead.',
+    );
+    warning(!('width' in props), 'Progress', '`width` is deprecated. Please use `size` instead.');
+  }
 
   const strokeColorNotArray = Array.isArray(strokeColor) ? strokeColor[0] : strokeColor;
   const strokeColorNotGradient =
@@ -152,22 +164,27 @@ const Progress: React.FC<ProgressProps> = (props) => {
 
   const classString = classNames(
     prefixCls,
+    `${prefixCls}-status-${progressStatus}`,
+    `${prefixCls}-${(type === 'dashboard' && 'circle') || (steps && 'steps') || type}`,
     {
-      [`${prefixCls}-inline-circle`]: type === 'circle' && props.width! <= 20,
-      [`${prefixCls}-${(type === 'dashboard' && 'circle') || (steps && 'steps') || type}`]: true,
-      [`${prefixCls}-status-${progressStatus}`]: true,
+      [`${prefixCls}-inline-circle`]: type === 'circle' && getSize(size, 'circle')[0] <= 20,
       [`${prefixCls}-show-info`]: showInfo,
-      [`${prefixCls}-${size}`]: size,
+      [`${prefixCls}-${size}`]: typeof size === 'string',
       [`${prefixCls}-rtl`]: direction === 'rtl',
     },
+    progressStyle?.className,
     className,
+    rootClassName,
     hashId,
   );
 
   return wrapSSR(
     <div
+      ref={ref}
+      style={{ ...progressStyle?.style, ...style }}
       className={classString}
       role="progressbar"
+      aria-valuenow={percentNumber}
       {...omit(restProps, [
         'trailColor',
         'strokeWidth',
@@ -182,6 +199,10 @@ const Progress: React.FC<ProgressProps> = (props) => {
       {progress}
     </div>,
   );
-};
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  Progress.displayName = 'Progress';
+}
 
 export default Progress;

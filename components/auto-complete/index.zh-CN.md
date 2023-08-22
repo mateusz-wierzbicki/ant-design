@@ -2,7 +2,8 @@
 category: Components
 subtitle: 自动完成
 title: AutoComplete
-cover: https://gw.alipayobjects.com/zos/alicdn/qtJm4yt45/AutoComplete.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*g8THS4NpV6sAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*WERTQ6qvgEYAAAAAAAAAAAAADrJ8AQ/original
 group:
   title: 数据录入
   order: 4
@@ -32,16 +33,21 @@ demo:
 <code src="./demo/certain-category.tsx">查询模式 - 确定类目</code>
 <code src="./demo/uncertain-category.tsx">查询模式 - 不确定类目</code>
 <code src="./demo/status.tsx">自定义状态</code>
+<code src="./demo/borderless.tsx">无边框</code>
+<code src="./demo/allowClear.tsx">自定义清除按钮</code>
 <code src="./demo/form-debug.tsx" debug>在 Form 中 Debug</code>
 <code src="./demo/render-panel.tsx" debug>\_InternalPanelDoNotUseOrYouWillBeFired</code>
 
 ## API
 
+通用属性参考：[通用属性](/docs/react/common-props)
+
 | 参数 | 说明 | 类型 | 默认值 | 版本 |
 | --- | --- | --- | --- | --- |
-| allowClear | 支持清除 | boolean | false |  |
+| allowClear | 支持清除 | boolean \| { clearIcon?: ReactNode } | false | 5.8.0: 支持对象形式 |
 | autoFocus | 自动获取焦点 | boolean | false |  |
 | backfill | 使用键盘选择选项的时候把选中项回填到输入框中 | boolean | false |  |
+| bordered | 是否有边框 | boolean | true |  |
 | children (自动完成的数据源) | 自动完成的数据源 | React.ReactElement&lt;OptionProps> \| Array&lt;React.ReactElement&lt;OptionProps>> | - |  |
 | children (自定义输入框) | 自定义输入框 | HTMLInputElement \| HTMLTextAreaElement \| React.ReactElement&lt;InputProps> | &lt;Input /> |  |
 | defaultActiveFirstOption | 是否默认高亮第一个选项 | boolean | true |  |
@@ -73,36 +79,18 @@ demo:
 | blur()  | 移除焦点 |      |
 | focus() | 获取焦点 |      |
 
+## Design Token
+
+<ComponentTokenTable component="Select"></ComponentTokenTable>
+
 ## FAQ
 
 ### 为何受控状态下使用 onSearch 无法输入中文？
 
-请使用 `onChange` 进行受控管理。`onSearch` 触发于搜索输入，与 `onChange` 时机不同。此外，点选选项时也不会触发 `onSearch` 事件。
+请使用 `onChange` 进行受控管理。`onSearch` 触发于搜索输入，与 `onChange` 时机不同。此外，点击选项时也不会触发 `onSearch` 事件。
 
 相关 issue：[#18230](https://github.com/ant-design/ant-design/issues/18230) [#17916](https://github.com/ant-design/ant-design/issues/17916)
 
-### v3 的部分属性为何在 v4 中没有了？
+### 为何 options 为空时，受控 open 展开不会显示下拉菜单？
 
-AutoComplete 组件是一个支持自动提示的 Input 组件，因而其不具有 `labelInValue` 等影响 value 展示的属性。在 v3 版本，AutoComplete 实现存在输入值如果遇到 `value` 与 `label` 相同时无法映射的问题。 v4 中不再支持 `label` 为值的输入形态。
-
-此外为了统一 API，`dataSource` 改为 `options` 你可以如下转换：
-
-#### v3
-
-```tsx
-dataSource = ['light', 'bamboo'];
-// or
-dataSource = [
-  { value: 'light', text: 'Light' },
-  { value: 'bamboo', text: 'Bamboo' },
-];
-```
-
-#### v4
-
-```tsx
-options = [
-  { value: 'light', label: 'Light' },
-  { value: 'bamboo', label: 'Bamboo' },
-];
-```
+AutoComplete 组件本质上是 Input 输入框的一种扩展，当 `options` 为空时，显示空文本会让用户误以为该组件不可操作，实际上它仍然可以进行文本输入操作。因此，为了避免给用户带来困惑，当 `options` 为空时，`open` 属性为 `true` 也不会展示下拉菜单，需要与 `options` 属性配合使用。

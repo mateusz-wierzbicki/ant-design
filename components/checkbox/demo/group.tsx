@@ -7,11 +7,13 @@ const onChange = (checkedValues: CheckboxValueType[]) => {
 };
 
 const plainOptions = ['Apple', 'Pear', 'Orange'];
+
 const options = [
   { label: 'Apple', value: 'Apple' },
   { label: 'Pear', value: 'Pear' },
   { label: 'Orange', value: 'Orange' },
 ];
+
 const optionsWithDisabled = [
   { label: 'Apple', value: 'Apple' },
   { label: 'Pear', value: 'Pear' },

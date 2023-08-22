@@ -1,10 +1,9 @@
 import { spyElementPrototypes } from 'rc-util/lib/test/domHook';
 import React from 'react';
 import { act } from 'react-dom/test-utils';
-import { fireEvent, render, waitFakeTimer, triggerResize, waitFor } from '../../../tests/utils';
+import { fireEvent, render, triggerResize, waitFakeTimer, waitFor } from '../../../tests/utils';
 import type { EllipsisConfig } from '../Base';
 import Base from '../Base';
-// eslint-disable-next-line no-unused-vars
 
 jest.mock('copy-to-clipboard');
 
@@ -46,7 +45,7 @@ describe('Typography.Ellipsis', () => {
 
     computeSpy = jest
       .spyOn(window, 'getComputedStyle')
-      .mockImplementation(() => ({ fontSize: 12 }) as unknown as CSSStyleDeclaration);
+      .mockImplementation(() => ({ fontSize: 12 } as unknown as CSSStyleDeclaration));
   });
 
   afterEach(() => {

@@ -1,6 +1,10 @@
 ---
-order: 7
+group:
+  title: 进阶使用
+  order: 1
+order: 0
 title: 定制主题
+tag: Updated
 ---
 
 Ant Design 设计规范和技术上支持灵活的样式定制，以满足业务和品牌上多样化的视觉需求，包括但不限于全局样式（主色、圆角、边框）和指定组件的视觉定制。
@@ -12,101 +16,246 @@ Ant Design 设计规范和技术上支持灵活的样式定制，以满足业务
 3. 支持针对某个/某些组件修改主题变量；
 4. ...
 
-## 在 ConfigProvider 中配置主题
+## 配置主题
 
-在 5.0 版本中我们把影响主题的最小元素称为 **Design Token**。通过修改 Design Token，我们可以呈现出各种各样的主题或者组件。
+在 5.0 版本中我们把影响主题的最小元素称为 **Design Token**。通过修改 Design Token，我们可以呈现出各种各样的主题或者组件。通过在 `ConfigProvider` 中传入 `theme` 属性，可以配置主题。在升级 v5 后，将默认使用 v5 的主题.
+
+<!-- prettier-ignore -->
+:::warning
+`ConfigProvider` 对 `message.xxx`、`Modal.xxx`、`notification.xxx` 等静态方法不会生效，原因是在这些方法中，antd 会通过 `ReactDOM.render` 动态创建新的 React 实体。其 context 与当前代码所在 context 并不相同，因而无法获取 context 信息。
+
+<!-- prettier-ignore -->
+当你需要 context 信息（例如 ConfigProvider 配置的内容）时，可以通过 `Modal.useModal` 方法返回 modal 实体以及 contextHolder 节点，将其插入到你需要获取 context 位置即可。也可通过 [App 包裹组件](/components/app-cn) 简化 useModal 等方法需要手动植入 contextHolder 的问题。
+:::
 
 ### 修改主题变量
 
-通过在 ConfigProvider 中传入 `theme`，可以配置主题。在升级 v5 后，将默认使用 v5 的主题，以下是将配置主题示例：
+通过 `theme` 中的 `token` 属性，可以修改一些主题变量。部分主题变量会引起其他主题变量的变化，我们把这些主题变量成为 Seed Token。
 
-```tsx
+```sandpack
+const sandpackConfig = {
+  autorun: true,
+};
+
+import { Button, ConfigProvider, Space } from 'antd';
 import React from 'react';
-import { ConfigProvider, Button } from 'antd';
 
 const App: React.FC = () => (
   <ConfigProvider
     theme={{
       token: {
+        // Seed Token，影响范围大
         colorPrimary: '#00b96b',
+        borderRadius: 2,
+
+        // 派生变量，影响范围小
+        colorBgContainer: '#f6ffed',
       },
     }}
   >
-    <Button />
+    <Space>
+      <Button type="primary">Primary</Button>
+      <Button>Default</Button>
+    </Space>
   </ConfigProvider>
 );
 
 export default App;
 ```
-
-这将会得到一个以 <div style="display: inline-block; width: 16px; height: 16px; border-radius: 4px; background: #00b96b; vertical-align: text-bottom;"></div> `#00b96b` 为主色的主题，以 Button 组件为例可以看到相应的变化：
-
-![themed button](https://gw.alipayobjects.com/mdn/rms_08e378/afts/img/A*CbF_RJfKEiwAAAAAAAAAAAAAARQnAQ)
 
 ### 使用预设算法
 
-通过修改算法可以快速生成风格迥异的主题，5.0 版本中默认提供三套预设算法，分别是默认算法 `theme.defaultAlgorithm`、暗色算法 `theme.darkAlgorithm` 和紧凑算法 `theme.compactAlgorithm`。你可以通过修改 ConfigProvider 中 `theme` 属性的 `algorithm` 属性来切换算法。
+通过修改算法可以快速生成风格迥异的主题，5.0 版本中默认提供三套预设算法，分别是:
 
-```tsx
+- 默认算法 `theme.defaultAlgorithm`
+- 暗色算法 `theme.darkAlgorithm`
+- 紧凑算法 `theme.compactAlgorithm`
+
+你可以通过 `theme` 中的 `algorithm` 属性来切换算法，并且支持配置多种算法，将会依次生效。
+
+```sandpack
+const sandpackConfig = {
+  dark: true,
+};
+
 import React from 'react';
-import { ConfigProvider, Button, theme } from 'antd';
+import { Button, ConfigProvider, Input, Space, theme } from 'antd';
 
 const App: React.FC = () => (
   <ConfigProvider
     theme={{
+      // 1. 单独使用暗色算法
       algorithm: theme.darkAlgorithm,
+
+      // 2. 组合使用暗色算法与紧凑算法
+      // algorithm: [theme.darkAlgorithm, theme.compactAlgorithm],
     }}
   >
-    <Button />
+    <Space>
+      <Input placeholder="Please Input" />
+      <Button type="primary">Submit</Button>
+    </Space>
   </ConfigProvider>
 );
 
 export default App;
 ```
 
-### 修改组件变量 (Component Token)
+### 修改组件变量
 
 除了整体的 Design Token，各个组件也会开放自己的 Component Token 来实现针对组件的样式定制能力，不同的组件之间不会相互影响。同样地，也可以通过这种方式来覆盖组件的其他 Design Token。
 
-```tsx
+<!-- prettier-ignore -->
+:::info{title=组件级别的主题算法}
+默认情况下，所有组件变量都仅仅是覆盖，不会基于 Seed Token 计算派生变量。
+
+<!-- prettier-ignore -->
+在 `>= 5.8.0` 版本中，组件变量支持传入 `algorithm` 属性，可以开启派生计算或者传入其他算法。
+:::
+
+```sandpack
 import React from 'react';
-import { ConfigProvider, Radio, Checkbox } from 'antd';
+import { ConfigProvider, Button, Space, Input, Divider } from 'antd';
 
 const App: React.FC = () => (
-  <ConfigProvider
-    theme={{
-      components: {
-        Radio: {
-          colorPrimary: '#00b96b',
+  <>
+    <ConfigProvider
+      theme={{
+        components: {
+          Button: {
+            colorPrimary: '#00b96b',
+            algorithm: true, // 启用算法
+          },
+          Input: {
+            colorPrimary: '#eb2f96',
+            algorithm: true, // 启用算法
+          }
         },
-      },
-    }}
-  >
-    <Radio>Radio</Radio>
-    <Checkbox>Checkbox</Checkbox>
-  </ConfigProvider>
+      }}
+    >
+      <Space>
+        <div style={{ fontSize: 14 }}>开启算法：</div>
+        <Input placeholder="Please Input" />
+        <Button type="primary">Submit</Button>
+      </Space>
+    </ConfigProvider>
+    <Divider />
+    <ConfigProvider
+      theme={{
+        components: {
+          Button: {
+            colorPrimary: '#00b96b',
+          },
+          Input: {
+            colorPrimary: '#eb2f96',
+          }
+        },
+      }}
+    >
+      <Space>
+        <div style={{ fontSize: 14 }}>禁用算法：</div>
+        <Input placeholder="Please Input" />
+        <Button type="primary">Submit</Button>
+      </Space>
+    </ConfigProvider>
+  </>
 );
 
 export default App;
 ```
 
-通过这种方式，我们可以仅将 Radio 组件的主色改为 <div style="display: inline-block; width: 16px; height: 16px; border-radius: 4px; background: #00b96b; vertical-align: text-bottom;"></div> `#00b96b`，而不会影响其他组件。
+### 禁用动画
 
-![component token](https://gw.alipayobjects.com/mdn/rms_08e378/afts/img/A*EMY0QrHFDjsAAAAAAAAAAAAAARQnAQ)
+antd 默认内置了一些组件交互动效让企业级页面更加富有细节，在一些极端场景可能会影响页面交互性能，如需关闭动画可以 `token` 中的 `motion` 修改为 `false`：
 
-## 动态主题的其他使用方式
+```sandpack
+import React from 'react';
+import { Switch, ConfigProvider, Space, Checkbox, Radio, Row, Col } from 'antd';
+
+export default () => {
+  const [checked, setChecked] = React.useState(false);
+
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      setChecked((prev) => !prev);
+    }, 1000);
+
+    return () => {
+      clearInterval(id);
+    };
+  }, []);
+
+  const nodes = (
+    <Space>
+      <Checkbox checked={checked}>Checkbox</Checkbox>
+      <Radio checked={checked}>Radio</Radio>
+      <Switch checked={checked} />
+    </Space>
+  );
+
+  return (
+    <Row gutter={[24, 24]}>
+      <Col span={24}>{nodes}</Col>
+
+      <Col span={24}>
+        <ConfigProvider
+          theme={{
+            token: {
+              motion: false,
+            },
+          }}
+        >
+          {nodes}
+        </ConfigProvider>
+      </Col>
+    </Row>
+  );
+};
+```
+
+## 进阶使用
 
 ### 动态切换
 
 在 v5 中，动态切换主题对用户来说是非常简单的，你可以在任何时候通过 `ConfigProvider` 的 `theme` 属性来动态切换主题，而不需要任何额外配置。
 
-### 局部主题
+```sandpack
+import { Button, ConfigProvider, Space, Input, ColorPicker, Divider } from 'antd';
+import React from 'react';
+
+const App: React.FC = () => {
+  const [primary, setPrimary] = React.useState('#1677ff');
+
+  return (
+    <>
+      <ColorPicker showText value={primary} onChangeComplete={(color) => setPrimary(color.toHexString())} />
+      <Divider />
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: primary,
+          },
+        }}
+      >
+        <Space>
+          <Input placeholder="Please Input" />
+          <Button type="primary">Submit</Button>
+        </Space>
+      </ConfigProvider>
+    </>
+  );
+}
+
+export default App;
+```
+
+### 局部主题（嵌套主题）
 
 可以嵌套使用 `ConfigProvider` 来实现局部主题的更换。在子主题中未被改变的 Design Token 将会继承父主题。
 
-```tsx
+```sandpack
 import React from 'react';
-import { ConfigProvider, Button } from 'antd';
+import { Button, ConfigProvider, Space } from 'antd';
 
 const App: React.FC = () => (
   <ConfigProvider
@@ -116,16 +265,18 @@ const App: React.FC = () => (
       },
     }}
   >
-    <Button />
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: '#1890ff',
-        },
-      }}
-    >
-      <Button />
-    </ConfigProvider>
+    <Space>
+      <Button type="primary">Theme 1</Button>
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: '#00b96b',
+          },
+        }}
+      >
+        <Button type="primary">Theme 2</Button>
+      </ConfigProvider>
+    </Space>
   </ConfigProvider>
 );
 
@@ -136,7 +287,7 @@ export default App;
 
 如果你希望使用当前主题下的 Design Token，我们提供了 `useToken` 这个 hook 来获取 Design Token。
 
-```tsx
+```sandpack
 import React from 'react';
 import { Button, theme } from 'antd';
 
@@ -145,7 +296,19 @@ const { useToken } = theme;
 const App: React.FC = () => {
   const { token } = useToken();
 
-  return <Button style={{ backgroundColor: token.colorPrimary }}>Button</Button>;
+  return (
+    <div
+      style={{
+        backgroundColor: token.colorPrimaryBg,
+        padding: token.padding,
+        borderRadius: token.borderRadius,
+        color: token.colorPrimaryText,
+        fontSize: token.fontSize,
+      }}
+    >
+      使用 Design Token
+    </div>
+  );
 };
 
 export default App;
@@ -153,14 +316,46 @@ export default App;
 
 ### 静态消费（如 less）
 
-当你需要非 React 生命周期消费 Token 变量时，可以通过静态方法将其导出：
+当你需要非 React 生命周期消费 Token 变量时，可以通过静态方法 `getDesignToken` 将其导出：
 
 ```jsx
 import { theme } from 'antd';
 
-const { defaultAlgorithm, defaultSeed } = theme;
+const { getDesignToken } = theme;
 
-const mapToken = defaultAlgorithm(defaultSeed);
+const globalToken = getDesignToken();
+```
+
+`getDesignToken` 和 ConfigProvider 一样，支持传入 `theme` 属性，用于获取指定主题的 Design Token。
+
+```tsx
+import { createRoot } from 'react-dom/client';
+import type { ThemeConfig } from 'antd';
+import { theme } from 'antd';
+
+const { getDesignToken, useToken } = theme;
+
+const config: ThemeConfig = {
+  token: {
+    colorPrimary: '#1890ff',
+  },
+};
+
+// 通过静态方法获取
+const globalToken = getDesignToken(config);
+
+// 通过 hook 获取
+const App = () => {
+  const { token } = useToken();
+  return null;
+};
+
+// 渲染示意
+createRoot(document.getElementById('#app')).render(
+  <ConfigProvider theme={config}>
+    <App />
+  </ConfigProvider>,
+);
 ```
 
 如果需要将其应用到静态样式编译框架，如 less 可以通过 less-loader 注入：
@@ -178,7 +373,13 @@ const mapToken = defaultAlgorithm(defaultSeed);
 
 兼容包提供了变量转换方法用于转成 v4 的 less 变量，如需使用[点击此处](/docs/react/migration-v5)查看详情。
 
-## 进阶使用
+### 调试主题
+
+我们提供了帮助用户调试主题的工具：[主题编辑器](/theme-editor-cn)
+
+你可以使用此工具自由地修改 Design Token，以达到您对主题的期望。
+
+## 基本概念
 
 在 Design Token 中我们提供了一套更加贴合设计的三层结构，将 Design Token 拆解为 Seed Token、Map Token 和 Alias Token 三部分。这三组 Token 并不是简单的分组，而是一个三层的派生关系，由 Seed Token 派生 Map Token，再由 Map Token 派生 Alias Token。在大部分情况下，使用 Seed Token 就可以满足定制主题的需要。但如果您需要更高程度的主题定制，您需要了解 antd 中 Design Token 的生命周期。
 
@@ -236,69 +437,6 @@ const theme = {
 };
 ```
 
-### 兼容性调整
-
-Ant Design 的 CSS-in-JS 默认通过 `:where` 选择器降低 CSS Selector 优先级，以减少用户升级 v5 时额外调整自定义样式成本。在某些场景下你如果需要支持的旧版浏览器，你可以使用 `@ant-design/cssinjs` 取消默认的降权操作（请注意版本保持与 antd 一致）：
-
-```tsx
-import React from 'react';
-import { StyleProvider } from '@ant-design/cssinjs';
-
-export default () => (
-  <StyleProvider hashPriority="high">
-    <MyApp />
-  </StyleProvider>
-);
-```
-
-切换后，样式将从 `:where` 切换为类选择器：
-
-```diff
---  :where(.css-bAMboO).ant-btn {
-++  .css-bAMboO.ant-btn {
-      color: #fff;
-    }
-```
-
-注意：关闭 `:where` 降权后，你可能需要手动调整一些样式的优先级。
-
-### 服务端渲染
-
-使用 `@ant-design/cssinjs` 将所需样式抽离：
-
-```tsx
-import React from 'react';
-import { renderToString } from 'react-dom/server';
-import { createCache, extractStyle, StyleProvider } from '@ant-design/cssinjs';
-
-export default () => {
-  // SSR Render
-  const cache = createCache();
-
-  const html = renderToString(
-    <StyleProvider cache={cache}>
-      <MyApp />
-    </StyleProvider>,
-  );
-
-  // Grab style from cache
-  const styleText = extractStyle(cache);
-
-  // Mix with style
-  return `
-<!DOCTYPE html>
-<html>
-  <head>
-    ${styleText}
-  </head>
-  <body>
-    <div id="root">${html}</div>
-  </body>
-</html>
-`;
-};
-```
-
 ## API
 
 ### Theme
@@ -308,257 +446,34 @@ export default () => {
 | token | 用于修改 Design Token | `AliasToken` | - |
 | inherit | 继承上层 ConfigProvider 中配置的主题。 | boolean | true |
 | algorithm | 用于修改 Seed Token 到 Map Token 的算法 | `(token: SeedToken) => MapToken` \| `((token: SeedToken) => MapToken)[]` | `defaultAlgorithm` |
-| components | 用于修改各个组件的 Component Token 以及覆盖该组件消费的 Alias Token | OverrideToken | - |
+| components | 用于修改各个组件的 Component Token 以及覆盖该组件消费的 Alias Token | `ComponentsConfig` | - |
 
-### OverrideToken
+### ComponentsConfig
 
 | 属性 | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- |
-| `Component` (可以是任意 antd 组件名，如 `Button`) | 用于修改 Component Token 以及覆盖该组件消费的 Alias Token | `ComponentToken & AliasToken` | - |
+| `Component` (可以是任意 antd 组件名，如 `Button`) | 用于修改 Component Token 以及覆盖该组件消费的 Alias Token | `ComponentToken & AliasToken & { algorithm: boolean \| (token: SeedToken) => MapToken` \| `((token: SeedToken) => MapToken)[]}` | - |
+
+> 组件级别的 `algorithm` 默认为 `false`，此时组件 Token 仅仅会覆盖该组件使用的 token，不会进行派生计算。设置为 `true` 时会继承当前全局算法；也可以和全局的 `algorithm` 一样传入一个或多个算法，这将会针对该组件覆盖全局的算法。
 
 ### SeedToken
 
-| 属性 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| colorPrimary | 品牌主色 | `string` | `#1677ff` |
-| colorSuccess | 成功色 | `string` | `#52c41a` |
-| colorWarning | 警戒色 | `string` | `#faad14` |
-| colorError | 错误色 | `string` | `#f5222d` |
-| colorInfo | 信息色 | `string` | `#1677ff` |
-| colorTextBase | 基础文本色 | `string` | `#000` |
-| colorTextLightSolid | 亮色文本色 | `string` | `#fff` |
-| colorBgBase | 基础背景色 | `string` | `#fff` |
-| fontFamily | 字体 | `string` | `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'` |
-| fontSize | 基础字号 | `number` | `14` |
-| lineWidth | 基础线宽 | `number` | `1` |
-| lineType | 线条样式 | `string` | `solid` |
-| motionUnit | 动画时长变化单位 | `number` | `0.1` |
-| motionBase | 动画基础时长 | `number` | `0` |
-| motionEaseOutCirc | - | `string` | `cubic-bezier(0.08, 0.82, 0.17, 1)` |
-| motionEaseInOutCirc | - | `string` | `cubic-bezier(0.78, 0.14, 0.15, 0.86)` |
-| motionEaseOut | - | `string` | `cubic-bezier(0.215, 0.61, 0.355, 1)` |
-| motionEaseInOut | - | `string` | `cubic-bezier(0.645, 0.045, 0.355, 1)` |
-| motionEaseOutBack | - | `string` | `cubic-bezier(0.12, 0.4, 0.29, 1.46)` |
-| motionEaseInQuint | - | `string` | `cubic-bezier(0.645, 0.045, 0.355, 1)` |
-| motionEaseOutQuint | - | `string` | `cubic-bezier(0.23, 1, 0.32, 1)` |
-| borderRadius | 基础圆角 | `number` | `6` |
-| sizeUnit | 尺寸变化单位 | `number` | `4` |
-| sizeStep | 尺寸基础大小 | `number` | `4` |
-| sizePopupArrow | 组件箭头尺寸 | `number` | `16` |
-| controlHeight | - | `number` | `32` |
-| zIndexBase | 基础 `z-index` | `number` | `0` |
-| zIndexPopupBase | 浮层基础 `z-index` | `number` | `1000` |
-| opacityImage | - | `number` | `1` |
-| wireframe | 线框化 | `boolean` | `false` |
+<TokenTable type="seed"></TokenTable>
 
 ### MapToken
 
 > 继承所有 SeedToken 的属性
 
-| 属性 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| colorText | 一级文本色 | `string` | `rgba(0, 0, 0, 0.88)` |
-| colorTextSecondary | 二级文本色 | `string` | `rgba(0, 0, 0, 0.65)` |
-| colorTextTertiary | 三级文本色 | `string` | `rgba(0, 0, 0, 0.45)` |
-| colorTextQuaternary | 四级文本色 | `string` | `rgba(0, 0, 0, 0.25)` |
-| colorFill | 一级填充色 | `string` | `rgba(0, 0, 0, 0.15)` |
-| colorFillSecondary | 二级填充色 | `string` | `rgba(0, 0, 0, 0.06)` |
-| colorFillTertiary | 三级填充色 | `string` | `rgba(0, 0, 0, 0.04)` |
-| colorFillQuaternary | 四级填充色 | `string` | `rgba(0, 0, 0, 0.02)` |
-| colorBgContainer | 组件容器背景色 | `string` | `#ffffff` |
-| colorBgElevated | 浮层容器背景色 | `string` | `#ffffff` |
-| colorBgLayout | 布局背景色 | `string` | `#f5f5f5` |
-| colorBgSpotlight | - | `string` | `rgba(0, 0, 0, 0.85)` |
-| colorBorder | 一级边框色 | `string` | `#d9d9d9` |
-| colorBorderSecondary | 二级边框色 | `string` | `#f0f0f0` |
-| colorSplit | 分割线颜色 | `string` | `rgba(0, 0, 0, 0.06)` |
-| colorPrimaryBg | 主色的浅色背景颜色 | `string` | `#e6f4ff` |
-| colorPrimaryBgHover | 主色的浅色背景色悬浮态 | `string` | `#bae0ff` |
-| colorPrimaryBorder | 主色的描边色 | `string` | `#91caff` |
-| colorPrimaryBorderHover | 主色的描边色悬浮态 | `string` | `#69b1ff` |
-| colorPrimaryHover | 主色的深色悬浮态 | `string` | `#4096ff` |
-| colorPrimary | 品牌主色 | `string` | `#1677ff` |
-| colorPrimaryActive | 主色的深色激活态 | `string` | `#0958d9` |
-| colorPrimaryTextHover | 主色的文本悬浮态 | `string` | `#4096ff` |
-| colorPrimaryText | 主色的文本默认态 | `string` | `#1677ff` |
-| colorPrimaryTextActive | 主色的文本激活态 | `string` | `#0958d9` |
-| colorSuccessBg | 成功色的浅色背景颜色 | `string` | `#f6ffed` |
-| colorSuccessBgHover | 成功色的浅色背景色悬浮态 | `string` | `#d9f7be` |
-| colorSuccessBorder | 成功色的描边色 | `string` | `#b7eb8f` |
-| colorSuccessBorderHover | 成功色的描边色悬浮态 | `string` | `#95de64` |
-| colorSuccessHover | 成功色的深色悬浮态 | `string` | `#95de64` |
-| colorSuccess | 成功色 | `string` | `#52c41a` |
-| colorSuccessActive | 成功色的深色激活态 | `string` | `#389e0d` |
-| colorSuccessTextHover | 成功色的文本悬浮态 | `string` | `#73d13d` |
-| colorSuccessText | 成功色的文本默认态 | `string` | `#52c41a` |
-| colorSuccessTextActive | 成功色的文本激活态 | `string` | `#389e0d` |
-| colorWarningBg | 警戒色的浅色背景颜色 | `string` | `#fffbe6` |
-| colorWarningBgHover | 警戒色的浅色背景色悬浮态 | `string` | `#fff1b8` |
-| colorWarningBorder | 警戒色的描边色 | `string` | `#ffe58f` |
-| colorWarningBorderHover | 警戒色的描边色悬浮态 | `string` | `#ffd666` |
-| colorWarningHover | 警戒色的深色悬浮态 | `string` | `#ffd666` |
-| colorWarning | 警戒色 | `string` | `#faad14` |
-| colorWarningActive | 警戒色的深色激活态 | `string` | `#d48806` |
-| colorWarningTextHover | 警戒色的文本悬浮态 | `string` | `#ffc53d` |
-| colorWarningText | 警戒色的文本默认态 | `string` | `#faad14` |
-| colorWarningTextActive | 警戒色的文本激活态 | `string` | `#d48806` |
-| colorErrorBg | 错误色的浅色背景颜色 | `string` | `#fff1f0` |
-| colorErrorBgHover | 错误色的浅色背景色悬浮态 | `string` | `#ffccc7` |
-| colorErrorBorder | 错误色的描边色 | `string` | `#ffa39e` |
-| colorErrorBorderHover | 错误色的描边色悬浮态 | `string` | `#ff7875` |
-| colorErrorHover | 错误色的深色悬浮态 | `string` | `#ff7875` |
-| colorError | 错误色 | `string` | `#ff4d4f` |
-| colorErrorActive | 错误色的深色激活态 | `string` | `#cf1322` |
-| colorErrorTextHover | 错误色的文本悬浮态 | `string` | `#ff4d4f` |
-| colorErrorText | 错误色的文本默认态 | `string` | `#f5222d` |
-| colorErrorTextActive | 错误色的文本激活态 | `string` | `#cf1322` |
-| colorInfoBg | 信息色的浅色背景颜色 | `string` | `#e6f4ff` |
-| colorInfoBgHover | 信息色的浅色背景色悬浮态 | `string` | `#bae0ff` |
-| colorInfoBorder | 信息色的描边色 | `string` | `#91caff` |
-| colorInfoBorderHover | 信息色的描边色悬浮态 | `string` | `#69b1ff` |
-| colorInfoHover | 信息色的深色悬浮态 | `string` | `#69b1ff` |
-| colorInfo | 信息色 | `string` | `#e6f4ff` |
-| colorInfoActive | 信息色的深色激活态 | `string` | `#0958d9` |
-| colorInfoTextHover | 信息色的文本悬浮态 | `string` | `#4096ff` |
-| colorInfoText | 信息色的文本默认态 | `string` | `#1677ff` |
-| colorInfoTextActive | 信息色的文本激活态 | `string` | `#0958d9` |
-| colorBgMask | 浮层的背景蒙层颜色 | `string` | `rgba(0, 0, 0, 0.45)` |
-| sizeXXL | - | `number` | `48` |
-| sizeXL | - | `number` | `32` |
-| sizeLG | - | `number` | `24` |
-| sizeMD | - | `number` | `20` |
-| sizeMS | - | `number` | `16` |
-| size | - | `number` | `16` |
-| sizeSM | - | `number` | `12` |
-| sizeXS | - | `number` | `8` |
-| sizeXXS | - | `number` | `4` |
-| lineWidthBold | 较粗的线宽 | `number` | `2` |
-| motionDurationFast | 动画速度快 | `string` | `0.1s` |
-| motionDurationMid | 动画速度中等 | `string` | `0.2s` |
-| motionDurationSlow | 动画速度慢 | `string` | `0.3s` |
-| borderRadiusXS | 更小的圆角 | `number` | `2` |
-| borderRadiusSM | 较小的圆角 | `number` | `4` |
-| borderRadiusLG | 较大的圆角 | `number` | `8` |
-| borderRadiusOuter | 向外的圆角（常用于箭头与其他元素相接处） | `number` | `4` |
-| controlHeightXS | - | `number` | `24` |
-| controlHeightSM | - | `number` | `16` |
-| controlHeightLG | - | `number` | `40` |
+<TokenTable type="map"></TokenTable>
 
 ### AliasToken
 
 > 继承所有 SeedToken 和 MapToken 的属性
 
-| 属性 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| colorFillContent | - | `string` | `rgba(0, 0, 0, 0.06)` |
-| colorFillContentHover | - | `string` | `rgba(0, 0, 0, 0.12)` |
-| colorFillAlter | - | `string` | `rgba(0, 0, 0, 0.02)` |
-| colorBgContainerDisabled | - | `string` | `rgba(0, 0, 0, 0.04)` |
-| colorBorderBg | - | `string` | `#ffffff` |
-| colorSplit | - | `string` | `rgba(0, 0, 0, 0.06)` |
-| colorTextPlaceholder | - | `string` | `rgba(0, 0, 0, 0.25)` |
-| colorTextDisabled | - | `string` | `rgba(0, 0, 0, 0.25)` |
-| colorTextHeading | - | `string` | `rgba(0, 0, 0, 0.85)` |
-| colorTextLabel | - | `string` | `rgba(0, 0, 0, 0.65)` |
-| colorTextDescription | - | `string` | `rgba(0, 0, 0, 0.45)` |
-| colorBgTextHover | - | `string` | `rgba(0, 0, 0, 0.06)` |
-| colorBgTextActive | - | `string` | `rgba(0, 0, 0, 0.15)` |
-| colorIcon | - | `string` | `rgba(0, 0, 0, 0.45)` |
-| colorIconHover | - | `string` | `rgba(0, 0, 0, 0.88)` |
-| colorLink | - | `string` | `#1677ff` |
-| colorLinkHover | - | `string` | `#69b1ff` |
-| colorLinkActive | - | `string` | `#0958d9` |
-| colorHighlight | - | `string` | `#ff4d4f` |
-| controlOutline | - | `string` | `rgba(5, 145, 255, 0.1)` |
-| colorWarningOutline | - | `string` | `rgba(255, 215, 5, 0.1)` |
-| colorErrorOutline | - | `string` | `rgba(255, 22, 5, 0.06)` |
-| fontSizeSM | - | `number` | `12` |
-| fontSize | - | `number` | `14` |
-| fontSizeLG | - | `number` | `16` |
-| fontSizeXL | - | `number` | `20` |
-| fontSizeIcon | - | `number` | `12` |
-| fontSizeHeading1 | - | `number` | `38` |
-| fontSizeHeading2 | - | `number` | `30` |
-| fontSizeHeading3 | - | `number` | `24` |
-| fontSizeHeading4 | - | `number` | `20` |
-| fontSizeHeading5 | - | `number` | `16` |
-| fontWeightStrong | - | `number` | `600` |
-| lineHeight | - | `number` | `1.5714` |
-| lineHeightLG | - | `number` | `1.5` |
-| lineHeightSM | - | `number` | `1.6667` |
-| lineHeightHeading1 | - | `number` | `1.2105` |
-| lineHeightHeading2 | - | `number` | `1.2667` |
-| lineHeightHeading3 | - | `number` | `1.3333` |
-| lineHeightHeading4 | - | `number` | `1.4` |
-| lineHeightHeading5 | - | `number` | `1.5` |
-| controlLineWidth | - | `number` | `1` |
-| controlLineType | - | `string` | `solid` |
-| controlOutlineWidth | - | `number` | `8` |
-| controlItemBgHover | - | `string` | `rgba(0, 0, 0, 0.04)` |
-| controlItemBgActive | - | `string` | `#e6f4ff` |
-| controlItemBgActiveHover | - | `string` | `#bae0ff` |
-| controlInteractiveSize | - | `number` | `16` |
-| controlItemBgActiveDisabled | - | `string` | `rgba(0, 0, 0, 0.15)` |
-| controlTmpOutline | - | `string` | `rgba(0, 0, 0, 0.02)` |
-| opacityLoading | - | `number` | `0.65` |
-| padding | - | `number` | `16` |
-| paddingSM | - | `number` | `12` |
-| paddingXS | - | `number` | `8` |
-| paddingXXS | - | `number` | `4` |
-| paddingLG | - | `number` | `24` |
-| paddingXL | - | `number` | `32` |
-| paddingTmp | - | `number` | `20` |
-| margin | - | `number` | `16` |
-| marginSM | - | `number` | `12` |
-| marginXS | - | `number` | `8` |
-| marginXXS | - | `number` | `4` |
-| marginLG | - | `number` | `24` |
-| marginXL | - | `number` | `32` |
-| marginXXL | - | `number` | `48` |
-| boxShadow | - | `string` | `0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)` |
-| boxShadowSecondary | - | `string` | `0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)` |
-| linkDecoration | - | `React.CSSProperties['textDecoration']` | `none` |
-| linkHoverDecoration | - | `React.CSSProperties['textDecoration']` | `none` |
-| linkFocusDecoration | - | `React.CSSProperties['textDecoration']` | `none` |
-| controlPaddingHorizontal | - | `number` | `12` |
-| controlPaddingHorizontalSM | - | `number` | `8` |
-| screenXS | - | `number` | `480` |
-| screenXSMin | - | `number` | `480` |
-| screenXSMax | - | `number` | `479` |
-| screenSM | - | `number` | `576` |
-| screenSMMin | - | `number` | `576` |
-| screenSMMax | - | `number` | `575` |
-| screenMD | - | `number` | `768` |
-| screenMDMin | - | `number` | `768` |
-| screenMDMax | - | `number` | `767` |
-| screenLG | - | `number` | `992` |
-| screenLGMin | - | `number` | `992` |
-| screenLGMax | - | `number` | `991` |
-| screenXL | - | `number` | `1200` |
-| screenXLMin | - | `number` | `1200` |
-| screenXLMax | - | `number` | `1199` |
-| screenXXL | - | `number` | `1600` |
-| screenXXLMin | - | `number` | `1599` |
-| screenXXLMax | - | `number` | `1600` |
-
-## 调试主题
-
-我们提供了帮助用户调试主题的工具：[主题编辑器](https://ant-design.github.io/antd-token-previewer/~demos/docs-theme-editor-simple)
-
-你可以使用此工具自由地修改 Design Token，以达到您对主题的期望。
-
-## 主题展示
-
-- [Ant Design 4.x 主题](https://ant-design.github.io/antd-token-previewer/~demos/docs-v4-theme)
+<TokenTable type="alias"></TokenTable>
 
 ## FAQ
 
 ### 为什么 `theme` 从 `undefined` 变为对象或者变为 `undefined` 时组件重新 mount 了？
 
 在 ConfigProvider 中我们通过 `DesignTokenContext` 传递 context，`theme` 为 `undefined` 时不会套一层 Provider，所以从无到有或者从有到无时 React 的 VirtualDOM 结构变化，导致组件重新 mount。解决方法：将 `undefined` 替换为空对象 `{}` 即可。
-
-<div style="display: none;">
-- 在 Umi 4 中定制主题
-- 与 V4 定制主题的区别
-- less 变量与 Design Token 对照表
-</div>

@@ -1,7 +1,9 @@
 import { defineConfig } from 'dumi';
 import path from 'path';
 import rehypeAntd from './.dumi/rehypeAntd';
+import remarkAntd from './.dumi/remarkAntd';
 import { version } from './package.json';
+import * as fs from 'fs-extra';
 
 export default defineConfig({
   conventionRoutes: {
@@ -10,6 +12,8 @@ export default defineConfig({
   },
   ssr: process.env.NODE_ENV === 'production' ? {} : false,
   hash: true,
+  mfsu: false,
+  crossorigin: {},
   outputPath: '_site',
   favicons: ['https://gw.alipayobjects.com/zos/rmsportal/rlpTLlbMzTNYuZGGCVYM.png'],
   resolve: {
@@ -28,22 +32,81 @@ export default defineConfig({
     'antd/lib': path.join(__dirname, 'components'),
     'antd/es': path.join(__dirname, 'components'),
     'antd/locale': path.join(__dirname, 'components/locale'),
-    // Change antd from `index.js` to `.dumi/theme/antd.js` to remove deps of root style
-    antd: require.resolve('./.dumi/theme/antd.js'),
+    antd: path.join(__dirname, 'components'),
   },
   extraRehypePlugins: [rehypeAntd],
-  extraBabelPresets: ['@emotion/babel-preset-css-prop'],
-  mfsu: false,
+  extraRemarkPlugins: [remarkAntd],
   metas: [{ name: 'theme-color', content: '#1677ff' }],
   analytics: {
     ga_v2: 'UA-72788897-1',
   },
+  analyze: {
+    analyzerPort: 'auto',
+  },
+  links: [
+    {
+      rel: 'prefetch',
+      as: 'font',
+      href: '//at.alicdn.com/t/webfont_6e11e43nfj.woff2',
+      type: 'font/woff2',
+      crossorigin: true,
+    },
+    {
+      rel: 'prefetch',
+      as: 'font',
+      href: '//at.alicdn.com/t/webfont_6e11e43nfj.woff',
+      type: 'font/woff',
+      crossorigin: true,
+    },
+    {
+      rel: 'prefetch',
+      as: 'font',
+      href: '//at.alicdn.com/t/webfont_6e11e43nfj.ttf',
+      type: 'font/ttf',
+      crossorigin: true,
+    },
+    {
+      rel: 'prefetch',
+      as: 'font',
+      href: '//at.alicdn.com/t/webfont_exesdog9toj.woff2',
+      type: 'font/woff2',
+      crossorigin: true,
+    },
+    {
+      rel: 'prefetch',
+      as: 'font',
+      href: '//at.alicdn.com/t/webfont_exesdog9toj.woff',
+      type: 'font/woff',
+      crossorigin: true,
+    },
+    {
+      rel: 'prefetch',
+      as: 'font',
+      href: '//at.alicdn.com/t/webfont_exesdog9toj.ttf',
+      type: 'font/ttf',
+      crossorigin: true,
+    },
+    {
+      rel: 'preload',
+      as: 'font',
+      href: '//at.alicdn.com/wf/webfont/exMpJIukiCms/Gsw2PSKrftc1yNWMNlXgw.woff2',
+      type: 'font/woff2',
+      crossorigin: true,
+    },
+    {
+      rel: 'preload',
+      as: 'font',
+      href: '//at.alicdn.com/wf/webfont/exMpJIukiCms/vtu73by4O2gEBcvBuLgeu.woff',
+      type: 'font/woff2',
+      crossorigin: true,
+    },
+  ],
   headScripts: [
     `
     (function () {
       function isLocalStorageNameSupported() {
-        var testKey = 'test';
-        var storage = window.localStorage;
+        const testKey = 'test';
+        const storage = window.localStorage;
         try {
           storage.setItem(testKey, '1');
           storage.removeItem(testKey);
@@ -53,13 +116,13 @@ export default defineConfig({
         }
       }
       // 优先级提高到所有静态资源的前面，语言不对，加载其他静态资源没意义
-      var pathname = location.pathname;
+      const pathname = location.pathname;
 
       function isZhCN(pathname) {
         return /-cn\\/?$/.test(pathname);
       }
       function getLocalizedPathname(path, zhCN) {
-        var pathname = path.indexOf('/') === 0 ? path : '/' + path;
+        const pathname = path.indexOf('/') === 0 ? path : '/' + path;
         if (!zhCN) {
           // to enUS
           return /\\/?index(-cn)?/.test(pathname) ? '/' : pathname.replace('-cn', '');
@@ -72,9 +135,9 @@ export default defineConfig({
       }
 
       // 兼容旧的 URL， \`?locale=...\`
-      var queryString = location.search;
+      const queryString = location.search;
       if (queryString) {
-        var isZhCNConfig = queryString.indexOf('zh-CN') > -1;
+        const isZhCNConfig = queryString.indexOf('zh-CN') > -1;
         if (isZhCNConfig && !isZhCN(pathname)) {
           location.pathname = getLocalizedPathname(pathname, isZhCNConfig);
         }
@@ -82,7 +145,7 @@ export default defineConfig({
 
       // 首页无视链接里面的语言设置 https://github.com/ant-design/ant-design/issues/4552
       if (isLocalStorageNameSupported() && (pathname === '/' || pathname === '/index-cn')) {
-        var lang =
+        const lang =
           (window.localStorage && localStorage.getItem('locale')) ||
           ((navigator.language || navigator.browserLanguage).toLowerCase() === 'zh-cn'
             ? 'zh-CN'
@@ -95,5 +158,11 @@ export default defineConfig({
       document.documentElement.className += isZhCN(pathname) ? 'zh-cn' : 'en-us';
     })();
     `,
+  ],
+  scripts: [
+    {
+      async: true,
+      content: fs.readFileSync(path.join(__dirname, '.dumi', 'mirror-modal.js')).toString(),
+    },
   ],
 });

@@ -1,99 +1,166 @@
-import React, { type FC, useLayoutEffect } from 'react';
-import { useOutlet } from 'dumi';
-import { ConfigProvider, theme as antdTheme } from 'antd';
-import { ThemeConfig } from 'antd/es/config-provider/context';
-import ThemeContext, { ThemeContextProps } from '../slots/ThemeContext';
-import ThemeSwitch from '../common/ThemeSwitch';
+import {
+  createCache,
+  legacyNotSelectorLinter,
+  logicalPropertiesLinter,
+  parentSelectorLinter,
+  StyleProvider,
+  extractStyle,
+} from '@ant-design/cssinjs';
+import { HappyProvider } from '@ant-design/happy-work-theme';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { createSearchParams, useOutlet, useSearchParams, useServerInsertedHTML } from 'dumi';
+import { getSandpackCssText } from '@codesandbox/sandpack-react';
+import { App, theme as antdTheme } from 'antd';
+import type { DirectionType } from 'antd/es/config-provider';
+import useLayoutState from '../../hooks/useLayoutState';
+import SiteThemeProvider from '../SiteThemeProvider';
 import useLocation from '../../hooks/useLocation';
+import type { ThemeName } from '../common/ThemeSwitch';
+import ThemeSwitch from '../common/ThemeSwitch';
+import type { SiteContextProps } from '../slots/SiteContext';
+import SiteContext from '../slots/SiteContext';
 
-const ANT_DESIGN_SITE_THEME = 'antd-site-theme';
+type Entries<T> = { [K in keyof T]: [K, T[K]] }[keyof T][];
+type SiteState = Partial<Omit<SiteContextProps, 'updateSiteContext'>>;
 
-const getAlgorithm = (theme: string) => {
-  if (theme === 'dark') {
-    return antdTheme.darkAlgorithm;
-  }
-  if (theme === 'compact') {
-    return antdTheme.compactAlgorithm;
-  }
-  return antdTheme.defaultAlgorithm;
-};
+const RESPONSIVE_MOBILE = 768;
 
-const getThemeString = (algorithm: typeof antdTheme.defaultAlgorithm) => {
-  if (algorithm === antdTheme.darkAlgorithm) {
-    return 'dark';
-  }
-  if (algorithm === antdTheme.compactAlgorithm) {
-    return 'compact';
-  }
-  return 'light';
-};
+// const styleCache = createCache();
+// if (typeof global !== 'undefined') {
+//   (global as any).styleCache = styleCache;
+// }
 
-const GlobalLayout: FC = () => {
-  const outlet = useOutlet();
-  const { pathname } = useLocation();
-
-  const [theme, setTheme] = React.useState<ThemeConfig>({
-    algorithm: [antdTheme.defaultAlgorithm],
+const getAlgorithm = (themes: ThemeName[] = []) =>
+  themes.map((theme) => {
+    if (theme === 'dark') {
+      return antdTheme.darkAlgorithm;
+    }
+    if (theme === 'compact') {
+      return antdTheme.compactAlgorithm;
+    }
+    return antdTheme.defaultAlgorithm;
   });
 
-  const handleThemeChange = (newTheme: ThemeConfig, ignoreAlgorithm: boolean = true) => {
-    const nextTheme = { ...newTheme };
-    if (ignoreAlgorithm) {
-      nextTheme.algorithm = theme.algorithm;
-    }
-    setTheme(nextTheme);
-    localStorage.setItem(
-      ANT_DESIGN_SITE_THEME,
-      JSON.stringify(nextTheme, (key, value) => {
-        if (key === 'algorithm') {
-          return Array.isArray(value) ? value.map((item) => getThemeString(item)) : ['light'];
-        }
-        return value;
-      }),
-    );
-  };
+const GlobalLayout: React.FC = () => {
+  const outlet = useOutlet();
+  const { pathname } = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [{ theme = [], direction, isMobile }, setSiteState] = useLayoutState<SiteState>({
+    isMobile: false,
+    direction: 'ltr',
+    theme: [],
+  });
 
-  const contextValue = React.useMemo<ThemeContextProps>(
-    () => ({
-      theme,
-      setTheme: handleThemeChange,
-    }),
-    [theme],
+  const updateSiteConfig = useCallback(
+    (props: SiteState) => {
+      setSiteState((prev) => ({ ...prev, ...props }));
+
+      // updating `searchParams` will clear the hash
+      const oldSearchStr = searchParams.toString();
+
+      let nextSearchParams: URLSearchParams = searchParams;
+      (Object.entries(props) as Entries<SiteContextProps>).forEach(([key, value]) => {
+        if (key === 'direction') {
+          if (value === 'rtl') {
+            nextSearchParams.set('direction', 'rtl');
+          } else {
+            nextSearchParams.delete('direction');
+          }
+        }
+        if (key === 'theme') {
+          nextSearchParams = createSearchParams({
+            ...nextSearchParams,
+            theme: value.filter((t) => t !== 'light'),
+          });
+        }
+      });
+
+      if (nextSearchParams.toString() !== oldSearchStr) {
+        setSearchParams(nextSearchParams);
+      }
+    },
+    [searchParams, setSearchParams],
   );
 
-  useLayoutEffect(() => {
-    const localTheme = localStorage.getItem(ANT_DESIGN_SITE_THEME);
-    if (localTheme) {
-      try {
-        const themeConfig = JSON.parse(localTheme);
-        if (themeConfig.algorithm) {
-          themeConfig.algorithm = themeConfig.algorithm.map((item: string) => getAlgorithm(item));
-        } else {
-          themeConfig.algorithm = [antdTheme.defaultAlgorithm];
-        }
-        setTheme(themeConfig);
-      } catch (e) {
-        console.error(e);
-      }
-    }
+  const updateMobileMode = () => {
+    updateSiteConfig({ isMobile: window.innerWidth < RESPONSIVE_MOBILE });
+  };
+
+  useEffect(() => {
+    const _theme = searchParams.getAll('theme') as ThemeName[];
+    const _direction = searchParams.get('direction') as DirectionType;
+
+    setSiteState({ theme: _theme, direction: _direction === 'rtl' ? 'rtl' : 'ltr' });
+    // Handle isMobile
+    updateMobileMode();
+
+    window.addEventListener('resize', updateMobileMode);
+    return () => {
+      window.removeEventListener('resize', updateMobileMode);
+    };
   }, []);
 
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      <ConfigProvider
-        theme={{
-          ...theme,
-        }}
-      >
+  const siteContextValue = useMemo(
+    () => ({
+      direction,
+      updateSiteConfig,
+      theme: theme!,
+      isMobile: isMobile!,
+    }),
+    [isMobile, direction, updateSiteConfig, theme],
+  );
+
+  const [styleCache] = React.useState(() => createCache());
+
+  useServerInsertedHTML(() => {
+    const styleText = extractStyle(styleCache, true);
+    return <style data-type="antd-cssinjs" dangerouslySetInnerHTML={{ __html: styleText }} />;
+  });
+
+  useServerInsertedHTML(() => (
+    <style
+      data-sandpack="true"
+      id="sandpack"
+      dangerouslySetInnerHTML={{ __html: getSandpackCssText() }}
+    />
+  ));
+
+  const demoPage = pathname.startsWith('/~demos');
+
+  // ============================ Render ============================
+  let content: React.ReactNode = outlet;
+
+  // Demo page should not contain App component
+  if (!demoPage) {
+    content = (
+      <App>
         {outlet}
-        {!pathname.startsWith('/~demos') && (
-          <ThemeSwitch
-            value={theme.algorithm as []}
-            onChange={(value) => handleThemeChange({ ...theme, algorithm: value }, false)}
-          />
-        )}
-      </ConfigProvider>
-    </ThemeContext.Provider>
+        <ThemeSwitch
+          value={theme}
+          onChange={(nextTheme) => updateSiteConfig({ theme: nextTheme })}
+        />
+      </App>
+    );
+  }
+
+  return (
+    <StyleProvider
+      cache={styleCache}
+      linters={[logicalPropertiesLinter, legacyNotSelectorLinter, parentSelectorLinter]}
+    >
+      <SiteContext.Provider value={siteContextValue}>
+        <SiteThemeProvider
+          theme={{
+            algorithm: getAlgorithm(theme),
+            token: {
+              motion: !theme.includes('motion-off'),
+            },
+          }}
+        >
+          <HappyProvider disabled={!theme.includes('happy-work')}>{content}</HappyProvider>
+        </SiteThemeProvider>
+      </SiteContext.Provider>
+    </StyleProvider>
   );
 };
 

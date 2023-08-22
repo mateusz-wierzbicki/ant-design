@@ -1,23 +1,21 @@
-import React, { FC, PropsWithChildren } from 'react';
-import { useRouteMeta, FormattedMessage } from 'dumi';
-import Footer from 'dumi/theme/slots/Footer';
-import { Layout, Typography, ConfigProvider } from 'antd';
-import { css } from '@emotion/react';
-import AffixTabs from './AffixTabs';
-import EditButton from '../../common/EditButton';
-import useSiteToken from '../../../hooks/useSiteToken';
+import { createStyles } from 'antd-style';
+import { FormattedMessage, useRouteMeta } from 'dumi';
+import type { PropsWithChildren } from 'react';
+import React from 'react';
+import { ConfigProvider, Layout, Typography } from 'antd';
 import CommonHelmet from '../../common/CommonHelmet';
+import EditButton from '../../common/EditButton';
+import Footer from '../../slots/Footer';
+import AffixTabs from './AffixTabs';
 
 export type ResourceLayoutProps = PropsWithChildren<{}>;
 
-const useStyle = () => {
-  const { token } = useSiteToken();
+const resourcePadding = 40;
+const articleMaxWidth = 1208;
+const resourcePaddingXS = 24;
+
+const useStyle = createStyles(({ token, css }) => {
   const { antCls } = token;
-
-  const resourcePadding = 40;
-  const articleMaxWidth = 1208;
-  const resourcePaddingXS = 24;
-
   return {
     resourcePage: css`
       footer {
@@ -36,6 +34,7 @@ const useStyle = () => {
       max-width: ${articleMaxWidth}px;
       margin: 0 auto;
       box-sizing: content-box;
+      min-height: 100vh;
 
       > .markdown {
         > p {
@@ -107,21 +106,20 @@ const useStyle = () => {
       }
     `,
   };
-};
+});
 
-const ResourceLayout: FC<ResourceLayoutProps> = ({ children }) => {
-  const styles = useStyle();
+const ResourceLayout: React.FC<ResourceLayoutProps> = ({ children }) => {
+  const { styles } = useStyle();
   const meta = useRouteMeta();
-
   return (
     <ConfigProvider theme={{ token: { colorBgLayout: '#fff' } }}>
       <Layout>
         <CommonHelmet />
-        <div id="resources-page" css={styles.resourcePage}>
+        <div id="resources-page" className={styles.resourcePage}>
           <AffixTabs />
-          <div css={styles.banner}>
+          <div className={styles.banner}>
             <Typography.Title style={{ fontSize: 30 }}>
-              {meta.frontmatter.title}
+              {meta.frontmatter?.title}
               <EditButton
                 title={<FormattedMessage id="app.content.edit-page" />}
                 filename={meta.frontmatter.filename}
@@ -129,7 +127,7 @@ const ResourceLayout: FC<ResourceLayoutProps> = ({ children }) => {
             </Typography.Title>
             <section>{meta.frontmatter.description}</section>
           </div>
-          <div css={styles.resourceContent}>{children}</div>
+          <div className={styles.resourceContent}>{children}</div>
           <Footer />
         </div>
       </Layout>

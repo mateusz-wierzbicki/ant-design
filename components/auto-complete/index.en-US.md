@@ -1,7 +1,8 @@
 ---
 category: Components
 title: AutoComplete
-cover: https://gw.alipayobjects.com/zos/alicdn/qtJm4yt45/AutoComplete.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*g8THS4NpV6sAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*WERTQ6qvgEYAAAAAAAAAAAAADrJ8AQ/original
 group:
   title: Data Entry
   order: 4
@@ -31,16 +32,21 @@ The differences with Select are:
 <code src="./demo/certain-category.tsx">Lookup-Patterns - Certain Category</code>
 <code src="./demo/uncertain-category.tsx">Lookup-Patterns - Uncertain Category</code>
 <code src="./demo/status.tsx">Status</code>
+<code src="./demo/borderless.tsx">Borderless</code>
+<code src="./demo/allowClear.tsx">Customize clear button</code>
 <code src="./demo/form-debug.tsx" debug>Debug in Form</code>
 <code src="./demo/render-panel.tsx" debug>_InternalPanelDoNotUseOrYouWillBeFired</code>
 
 ## API
 
+Common props ref：[Common props](/docs/react/common-props)
+
 | Property | Description | Type | Default | Version |
 | --- | --- | --- | --- | --- |
-| allowClear | Show clear button | boolean | false |  |
+| allowClear | Show clear button | boolean \| { clearIcon?: ReactNode } | false | 5.8.0: Support Object type |
 | autoFocus | If get focus when component mounted | boolean | false |  |
 | backfill | If backfill selected item the input when using keyboard | boolean | false |  |
+| bordered | Whether has border style | boolean | true |  |
 | children (for customize input element) | Customize input element | HTMLInputElement \| HTMLTextAreaElement \| React.ReactElement&lt;InputProps> | &lt;Input /> |  |
 | children (for dataSource) | Data source to auto complete | React.ReactElement&lt;OptionProps> \| Array&lt;React.ReactElement&lt;OptionProps>> | - |  |
 | defaultActiveFirstOption | Whether active first option by default | boolean | true |  |
@@ -71,6 +77,10 @@ The differences with Select are:
 | blur()  | Remove focus |         |
 | focus() | Get focus    |         |
 
+## Design Token
+
+<ComponentTokenTable component="Select"></ComponentTokenTable>
+
 ## FAQ
 
 ### Why doesn't the text composition system work well with onSearch in controlled mode?
@@ -79,28 +89,6 @@ Please use `onChange` to manage control state. `onSearch` is used for searching 
 
 Related issue: [#18230](https://github.com/ant-design/ant-design/issues/18230) [#17916](https://github.com/ant-design/ant-design/issues/17916)
 
-### Part of the api in v3 are not available in v4?
+### Why won't a controlled open AutoComplete display a drop-down menu when options are empty?
 
-AutoComplete is an Input component that supports auto complete tips. As such, it should not support props like `labelInValue` that affect value display. In v3, the AutoComplete implementation can not handle the case where the `value` and `label` are identical. v4 not longer support `label` as the value input.
-
-Besides, to unify the API, `dataSource` is replaced with `options`. You can migrate with the following change:
-
-#### v3
-
-```tsx
-dataSource = ['light', 'bamboo'];
-// or
-dataSource = [
-  { value: 'light', text: 'Light' },
-  { value: 'bamboo', text: 'Bamboo' },
-];
-```
-
-#### v4
-
-```tsx
-options = [
-  { value: 'light', label: 'Light' },
-  { value: 'bamboo', label: 'Bamboo' },
-];
-```
+The AutoComplete component is essentially an extension of the Input form element. When the `options` property is empty, displaying empty text could mislead the user into believing the component is not operational, when in fact they are still able to input text. To avoid confusion, the `open` property will not display the drop-down menu when set to `true` and in combination with an empty `options` property. The `open` property must be used in conjunction with the `options` property.

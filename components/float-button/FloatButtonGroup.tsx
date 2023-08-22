@@ -1,12 +1,13 @@
-import React, { useRef, memo, useContext } from 'react';
 import CloseOutlined from '@ant-design/icons/CloseOutlined';
 import FileTextOutlined from '@ant-design/icons/FileTextOutlined';
 import classNames from 'classnames';
 import CSSMotion from 'rc-motion';
 import useMergedState from 'rc-util/lib/hooks/useMergedState';
-import FloatButton, { floatButtonPrefixCls } from './FloatButton';
+import React, { memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import warning from '../_util/warning';
 import type { ConfigConsumerProps } from '../config-provider';
 import { ConfigContext } from '../config-provider';
+import FloatButton, { floatButtonPrefixCls } from './FloatButton';
 import { FloatButtonGroupProvider } from './context';
 import type { FloatButtonGroupProps } from './interface';
 import useStyle from './style';
@@ -24,6 +25,8 @@ const FloatButtonGroup: React.FC<FloatButtonGroupProps> = (props) => {
     trigger,
     children,
     onOpenChange,
+    open: customOpen,
+    ...floatButtonProps
   } = props;
 
   const { direction, getPrefixCls } = useContext<ConfigConsumerProps>(ConfigContext);
@@ -39,25 +42,13 @@ const FloatButtonGroup: React.FC<FloatButtonGroupProps> = (props) => {
 
   const wrapperCls = classNames(hashId, `${groupPrefixCls}-wrap`);
 
-  const [open, setOpen] = useMergedState(false, { value: props.open });
+  const [open, setOpen] = useMergedState(false, { value: customOpen });
 
-  const clickAction = useRef<React.HTMLAttributes<HTMLAnchorElement | HTMLButtonElement>>({});
+  const floatButtonGroupRef = useRef<HTMLDivElement>(null);
+  const floatButtonRef = useRef<HTMLButtonElement | HTMLAnchorElement>(null);
 
-  const hoverAction = useRef<React.HTMLAttributes<HTMLDivElement>>({});
-
-  if (trigger === 'click') {
-    clickAction.current = {
-      onClick() {
-        setOpen((prevState) => {
-          onOpenChange?.(!prevState);
-          return !prevState;
-        });
-      },
-    };
-  }
-
-  if (trigger === 'hover') {
-    hoverAction.current = {
+  const hoverAction = useMemo<React.DOMAttributes<HTMLDivElement>>(() => {
+    const hoverTypeAction = {
       onMouseEnter() {
         setOpen(true);
         onOpenChange?.(true);
@@ -67,11 +58,51 @@ const FloatButtonGroup: React.FC<FloatButtonGroupProps> = (props) => {
         onOpenChange?.(false);
       },
     };
+    return trigger === 'hover' ? hoverTypeAction : {};
+  }, [trigger]);
+
+  const handleOpenChange = () => {
+    setOpen((prevState) => {
+      onOpenChange?.(!prevState);
+      return !prevState;
+    });
+  };
+
+  const onClick = useCallback(
+    (e: MouseEvent) => {
+      if (floatButtonGroupRef.current?.contains(e.target as Node)) {
+        if (floatButtonRef.current?.contains(e.target as Node)) {
+          handleOpenChange();
+        }
+        return;
+      }
+      setOpen(false);
+      onOpenChange?.(false);
+    },
+    [trigger],
+  );
+
+  useEffect(() => {
+    if (trigger === 'click') {
+      document.addEventListener('click', onClick);
+      return () => {
+        document.removeEventListener('click', onClick);
+      };
+    }
+  }, [trigger]);
+
+  // =================== Warning =====================
+  if (process.env.NODE_ENV !== 'production') {
+    warning(
+      !('open' in props) || !!trigger,
+      'FloatButton.Group',
+      '`open` need to be used together with `trigger`',
+    );
   }
 
   return wrapSSR(
     <FloatButtonGroupProvider value={shape}>
-      <div className={groupCls} style={style} {...hoverAction.current}>
+      <div ref={floatButtonGroupRef} className={groupCls} style={style} {...hoverAction}>
         {trigger && ['click', 'hover'].includes(trigger) ? (
           <>
             <CSSMotion visible={open} motionName={`${groupPrefixCls}-wrap`}>
@@ -80,11 +111,13 @@ const FloatButtonGroup: React.FC<FloatButtonGroupProps> = (props) => {
               )}
             </CSSMotion>
             <FloatButton
+              ref={floatButtonRef}
               type={type}
               shape={shape}
               icon={open ? closeIcon : icon}
               description={description}
-              {...clickAction.current}
+              aria-label={props['aria-label']}
+              {...floatButtonProps}
             />
           </>
         ) : (

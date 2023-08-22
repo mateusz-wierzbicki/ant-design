@@ -2,7 +2,8 @@
 category: Components
 group: Feedback
 title: Spin
-cover: https://gw.alipayobjects.com/zos/alicdn/LBcJqCPRv/Spin.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*5mC5TomY4B0AAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*i43_ToFrL8YAAAAAAAAAAAAADrJ8AQ/original
 demo:
   cols: 2
 ---
@@ -26,6 +27,8 @@ When part of the page is waiting for asynchronous data or during a rendering pro
 
 ## API
 
+Common props ref：[Common props](/docs/react/common-props)
+
 | Property | Description | Type | Default |
 | --- | --- | --- | --- |
 | delay | Specifies a delay in milliseconds for loading state (prevent flush) | number (milliseconds) | - |
@@ -40,3 +43,7 @@ When part of the page is waiting for asynchronous data or during a rendering pro
 - `Spin.setDefaultIndicator(indicator: ReactNode)`
 
   You can define default spin element globally.
+
+## Design Token
+
+<ComponentTokenTable component="Spin"></ComponentTokenTable>

@@ -1,12 +1,25 @@
-import { initZoomMotion } from '../../style/motion';
-import type { FullToken, GenerateStyle, PresetColorType } from '../../theme/internal';
-import { genComponentStyleHook, mergeToken, PresetColors } from '../../theme/internal';
 import { resetComponent } from '../../style';
+import { initZoomMotion } from '../../style/motion';
 import getArrowStyle from '../../style/placementArrow';
+import type { FullToken, GenerateStyle, PresetColorType } from '../../theme/internal';
+import { PresetColors, genComponentStyleHook, mergeToken } from '../../theme/internal';
 
 export interface ComponentToken {
-  zIndexPopup: number;
+  /**
+   * @desc 气泡卡片宽度
+   * @descEN Width of Popover
+   */
   width: number;
+  /**
+   * @desc 气泡卡片最小宽度
+   * @descEN Min width of Popover
+   */
+  minWidth: number;
+  /**
+   * @desc 气泡卡片 z-index
+   * @descEN z-index of Popover
+   */
+  zIndexPopup: number;
 }
 
 export type PopoverToken = FullToken<'Popover'> & {
@@ -18,9 +31,8 @@ export type PopoverToken = FullToken<'Popover'> & {
 const genBaseStyle: GenerateStyle<PopoverToken> = (token) => {
   const {
     componentCls,
-    popoverBg,
     popoverColor,
-    width,
+    minWidth,
     fontWeightStrong,
     popoverPadding,
     boxShadowSecondary,
@@ -28,6 +40,8 @@ const genBaseStyle: GenerateStyle<PopoverToken> = (token) => {
     borderRadiusLG: borderRadius,
     zIndexPopup,
     marginXS,
+    colorBgElevated,
+    popoverBg,
   } = token;
 
   return [
@@ -36,13 +50,19 @@ const genBaseStyle: GenerateStyle<PopoverToken> = (token) => {
         ...resetComponent(token),
         position: 'absolute',
         top: 0,
-        insetInlineStart: 0,
+        // use `left` to fix https://github.com/ant-design/ant-design/issues/39195
+        left: {
+          _skip_check_: true,
+          value: 0,
+        },
         zIndex: zIndexPopup,
         fontWeight: 'normal',
         whiteSpace: 'normal',
         textAlign: 'start',
         cursor: 'auto',
         userSelect: 'text',
+        transformOrigin: `var(--arrow-x, 50%) var(--arrow-y, 50%)`,
+        '--antd-arrow-background-color': colorBgElevated,
 
         '&-rtl': {
           direction: 'rtl',
@@ -65,7 +85,7 @@ const genBaseStyle: GenerateStyle<PopoverToken> = (token) => {
         },
 
         [`${componentCls}-title`]: {
-          minWidth: width,
+          minWidth,
           marginBottom: marginXS,
           color: colorTextHeading,
           fontWeight: fontWeightStrong,
@@ -78,13 +98,17 @@ const genBaseStyle: GenerateStyle<PopoverToken> = (token) => {
     },
 
     // Arrow Style
-    getArrowStyle(token, { colorBg: token.colorBgElevated }),
+    getArrowStyle(token, {
+      colorBg: 'var(--antd-arrow-background-color)',
+    }),
 
     // Pure Render
     {
       [`${componentCls}-pure`]: {
         position: 'relative',
         maxWidth: 'none',
+        margin: token.sizePopupArrow,
+        display: 'inline-block',
 
         [`${componentCls}-content`]: {
           display: 'inline-block',
@@ -99,18 +123,15 @@ const genColorStyle: GenerateStyle<PopoverToken> = (token) => {
 
   return {
     [componentCls]: PresetColors.map((colorKey: keyof PresetColorType) => {
-      const lightColor = token[`${colorKey}-6`];
+      const lightColor = token[`${colorKey}6`];
       return {
         [`&${componentCls}-${colorKey}`]: {
+          '--antd-arrow-background-color': lightColor,
           [`${componentCls}-inner`]: {
             backgroundColor: lightColor,
           },
           [`${componentCls}-arrow`]: {
             background: 'transparent',
-
-            '&:before': {
-              backgroundColor: lightColor,
-            },
           },
         },
       };
@@ -161,9 +182,9 @@ export default genComponentStyleHook(
     const { colorBgElevated, colorText, wireframe } = token;
 
     const popoverToken = mergeToken<PopoverToken>(token, {
+      popoverPadding: 12, // Fixed Value
       popoverBg: colorBgElevated,
       popoverColor: colorText,
-      popoverPadding: 12, // Fixed Value
     });
 
     return [
@@ -173,8 +194,12 @@ export default genComponentStyleHook(
       initZoomMotion(popoverToken, 'zoom-big'),
     ];
   },
-  ({ zIndexPopupBase }) => ({
-    zIndexPopup: zIndexPopupBase + 30,
+  (token) => ({
     width: 177,
+    minWidth: 177,
+    zIndexPopup: token.zIndexPopupBase + 30,
   }),
+  {
+    deprecatedTokens: [['width', 'minWidth']],
+  },
 );

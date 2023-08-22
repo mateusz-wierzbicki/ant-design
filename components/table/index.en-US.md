@@ -2,7 +2,8 @@
 category: Components
 group: Data Display
 title: Table
-cover: https://gw.alipayobjects.com/zos/alicdn/f-SbcX2Lx/Table.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*3yz3QqMlShYAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*Sv8XQ50NB40AAAAAAAAAAAAADrJ8AQ/original
 ---
 
 A table displays rows of data.
@@ -67,6 +68,7 @@ const columns = [
 <code src="./demo/row-selection.tsx">selection</code>
 <code src="./demo/row-selection-and-operation.tsx">Selection and operation</code>
 <code src="./demo/row-selection-custom.tsx">Custom selection</code>
+<code src="./demo/row-selection-debug.tsx" debug>Selection Perf</code>
 <code src="./demo/head.tsx">Filter and sorter</code>
 <code src="./demo/filter-in-tree.tsx">Filter in Tree</code>
 <code src="./demo/filter-search.tsx">Filter search</code>
@@ -90,6 +92,7 @@ const columns = [
 <code src="./demo/edit-row.tsx">Editable Rows</code>
 <code src="./demo/nested-table.tsx">Nested tables</code>
 <code src="./demo/drag-sorting.tsx">Drag sorting</code>
+<code src="./demo/drag-sorting-handler.tsx">Drag sorting with handler</code>
 <code src="./demo/resizable-column.tsx" debug>Resizable column</code>
 <code src="./demo/ellipsis.tsx">ellipsis column</code>
 <code src="./demo/ellipsis-custom-tooltip.tsx">ellipsis column custom tooltip</code>
@@ -101,30 +104,33 @@ const columns = [
 <code src="./demo/row-selection-custom-debug.tsx" debug>Custom selection group</code>
 <code src="./demo/sticky.tsx">Fixed header and scroll bar with the page</code>
 <code src="./demo/dynamic-settings.tsx">Dynamic Settings</code>
+<code src="./demo/selections-debug.tsx" debug>selections with icon</code>
 
 ## API
+
+Common props ref：[Common props](/docs/react/common-props)
 
 ### Table
 
 | Property | Description | Type | Default | Version |
 | --- | --- | --- | --- | --- |
 | bordered | Whether to show all table borders | boolean | false |  |
-| columns | Columns of table | [ColumnsType](#Column)\[] | - |  |
+| columns | Columns of table | [ColumnsType](#column)\[] | - |  |
 | components | Override default table elements | [TableComponents](https://github.com/react-component/table/blob/75ee0064e54a4b3215694505870c9d6c817e9e4a/src/interface.ts#L129) | - |  |
 | dataSource | Data record array to be displayed | object\[] | - |  |
 | expandable | Config expandable content | [expandable](#expandable) | - |  |
 | footer | Table footer renderer | function(currentPageData) | - |  |
 | getPopupContainer | The render container of dropdowns in table | (triggerNode) => HTMLElement | () => TableHtmlElement |  |
-| loading | Loading status of table | boolean \| [Spin Props](/components/spin/#API) | false |  |
+| loading | Loading status of table | boolean \| [Spin Props](/components/spin/#api) | false |  |
 | locale | The i18n text including filter, sort, empty text, etc | object | [Default Value](https://github.com/ant-design/ant-design/blob/6dae4a7e18ad1ba193aedd5ab6867e1d823e2aa4/components/locale/en_US.tsx#L19-L37) |  |
-| pagination | Config of pagination. You can ref table pagination [config](#pagination) or full [`pagination`](/components/pagination/) document, hide it by setting it to `false` | object | - |  |
+| pagination | Config of pagination. You can ref table pagination [config](#pagination) or full [`pagination`](/components/pagination/) document, hide it by setting it to `false` | object \| `false` | - |  |
 | rowClassName | Row's className | function(record, index): string | - |  |
 | rowKey | Row's unique key, could be a string or function that returns a string | string \| function(record): string | `key` |  |
-| rowSelection | Row selection [config](#rowSelection) | object | - |  |
+| rowSelection | Row selection [config](#rowselection) | object | - |  |
 | scroll | Whether the table can be scrollable, [config](#scroll) | object | - |  |
 | showHeader | Whether to show table header | boolean | true |  |
-| showSorterTooltip | The header show next sorter direction tooltip. It will be set as the property of Tooltip if its type is object | boolean \| [Tooltip props](/components/tooltip/#API) | true |  |
-| size | Size of table | `default` \| `middle` \| `small` | `default` |  |
+| showSorterTooltip | The header show next sorter direction tooltip. It will be set as the property of Tooltip if its type is object | boolean \| [Tooltip props](/components/tooltip/#api) | true |  |
+| size | Size of table | `large` \| `middle` \| `small` | `large` |  |
 | sortDirections | Supported sort way, could be `ascend`, `descend` | Array | \[`ascend`, `descend`] |  |
 | sticky | Set sticky header and scroll bar | boolean \| `{offsetHeader?: number, offsetScroll?: number, getContainer?: () => HTMLElement}` | - | 4.6.0 (getContainer: 4.7.0) |
 | summary | Summary content | (currentData) => ReactNode | - |  |
@@ -142,11 +148,11 @@ Same as `onRow` `onHeaderRow` `onCell` `onHeaderCell`
 <Table
   onRow={(record, rowIndex) => {
     return {
-      onClick: event => {}, // click row
-      onDoubleClick: event => {}, // double click row
-      onContextMenu: event => {}, // right button click row
-      onMouseEnter: event => {}, // mouse enter row
-      onMouseLeave: event => {}, // mouse leave row
+      onClick: (event) => {}, // click row
+      onDoubleClick: (event) => {}, // double click row
+      onContextMenu: (event) => {}, // right button click row
+      onMouseEnter: (event) => {}, // mouse enter row
+      onMouseLeave: (event) => {}, // mouse leave row
     };
   }}
   onHeaderRow={(columns, index) => {
@@ -183,12 +189,14 @@ One of the Table `columns` prop for describing the table's columns, Column has t
 | fixed | (IE not support) Set column to be fixed: `true`(same as left) `'left'` `'right'` | boolean \| string | false |  |
 | key | Unique key of this column, you can ignore this prop if you've set a unique `dataIndex` | string | - |  |
 | render | Renderer of the table cell. The return value should be a ReactNode | function(text, record, index) {} | - |  |
-| responsive | The list of breakpoints at which to display this column. Always visible if not set. | [Breakpoint](https://github.com/ant-design/ant-design/blob/015109b42b85c63146371b4e32b883cf97b088e8/components/_util/responsiveObserve.ts#L1)\[] | - | 4.2.0 |
+| responsive | The list of breakpoints at which to display this column. Always visible if not set | [Breakpoint](https://github.com/ant-design/ant-design/blob/015109b42b85c63146371b4e32b883cf97b088e8/components/_util/responsiveObserve.ts#L1)\[] | - | 4.2.0 |
+| rowScope | Set scope attribute for all cells in this column | `row` \| `rowgroup` | - | 5.1.0 |
 | shouldCellUpdate | Control cell render logic | (record, prevRecord) => boolean | - | 4.3.0 |
 | showSorterTooltip | If header show next sorter direction tooltip, override `showSorterTooltip` in table | boolean \| [Tooltip props](/components/tooltip/) | true |  |
 | sortDirections | Supported sort way, override `sortDirections` in `Table`, could be `ascend`, `descend` | Array | \[`ascend`, `descend`] |  |
-| sorter | Sort function for local sort, see [Array.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)'s compareFunction. If you need sort buttons only, set to `true` | function \| boolean | - |  |
+| sorter | Sort function for local sort, see [Array.sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)'s compareFunction. If you need sort buttons only, set to `true` | function \| boolean \| { compare: function, multiple: number } | - |  |
 | sortOrder | Order of sorted values: `ascend` `descend` `null` | `ascend` \| `descend` \| null | - |  |
+| sortIcon | Customized sort icon | (props: { sortOrder }) => ReactNode | - | 5.6.0 |
 | title | Title of this column | ReactNode \| ({ sortOrder, sortColumn, filters }) => ReactNode | - |  |
 | width | Width of this column ([width not working?](https://github.com/ant-design/ant-design/issues/13825#issuecomment-449889241)) | string \| number | - |  |
 | onCell | Set props on per cell | function(record, rowIndex) | - |  |
@@ -232,7 +240,7 @@ Properties for expandable.
 | indentSize | Indent size in pixels of tree data | number | 15 |  |
 | rowExpandable | Enable row can be expandable | (record) => boolean | - |  |
 | showExpandColumn | Show expand column | boolean | true | 4.18.0 |
-| onExpand | Callback executed when the row expand icon is clicked | function(expanded, record) | - |  |
+| onExpand | Callback executed when the row expand icon is clicked | function(record, event) | - |  |
 | onExpandedRowsChange | Callback executed when the expanded rows change | function(expandedRows) | - |  |
 
 ### rowSelection
@@ -252,6 +260,7 @@ Properties for row selection.
 | selectedRowKeys | Controlled selected row keys | string\[] \| number\[] | \[] |  |
 | selections | Custom selection [config](#selection), only displays default selections when set to `true` | object\[] \| boolean | - |  |
 | type | `checkbox` or `radio` | `checkbox` \| `radio` | `checkbox` |  |
+| onCell | Set props on per cell. Same as `onCell` in column | function(record, rowIndex) | - | 5.5.0 |
 | onChange | Callback executed when selected rows change | function(selectedRowKeys, selectedRows, info: { type }) | - | `info.type`: 4.21.0 |
 | onSelect | Callback executed when select/deselect one row | function(record, selected, selectedRows, nativeEvent) | - |  |
 | onSelectAll | Callback executed when select/deselect all rows | function(selected, selectedRows, changeRows) | - |  |
@@ -280,6 +289,7 @@ Properties for row selection.
 ```tsx
 import { Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import React from 'react';
 
 interface User {
   key: number;
@@ -301,18 +311,24 @@ const data: User[] = [
   },
 ];
 
-export default () => (
+const Demo: React.FC = () => (
   <>
     <Table<User> columns={columns} dataSource={data} />
-    /* JSX style usage */
+    {/* JSX style usage */}
     <Table<User> dataSource={data}>
       <Table.Column<User> key="name" title="Name" dataIndex="name" />
     </Table>
   </>
 );
+
+export default Demo;
 ```
 
 Here is the [CodeSandbox for TypeScript](https://codesandbox.io/s/serene-platform-0jo5t).
+
+## Design Token
+
+<ComponentTokenTable component="Table"></ComponentTokenTable>
 
 ## Note
 
@@ -326,14 +342,8 @@ If `dataSource[i].key` is not provided, then you should specify the primary key 
 // primary key is uid
 return <Table rowKey="uid" />;
 // or
-return <Table rowKey={record => record.uid} />;
+return <Table rowKey={(record) => record.uid} />;
 ```
-
-## Migrate to v4
-
-Table removes `onRowClick`, `onRowDoubleClick`, `onRowMouseEnter`, `onRowMouseLeave` and some other api which is already deprecated in v3. If you only use api listing in official document, that's OK.
-
-Besides, the breaking change is changing `dataIndex` from nest string path like `user.age` to string array path like `['user', 'age']`. This help to resolve developer should additional work on the field which contains `.`.
 
 ## FAQ
 
@@ -343,7 +353,7 @@ You can set `hideOnSinglePage` with `pagination` prop.
 
 ### Table will return to first page when filter data.
 
-Table total page count usually reduce after filter data, we defaultly return to first page in case of current page is out of filtered results.
+Table total page count usually reduce after filter data, we by default return to first page in case of current page is out of filtered results.
 
 You may need to keep current page after filtering when fetch data from remote service, please check [this demo](https://codesandbox.io/s/yuanchengjiazaishuju-ant-design-demo-7y2uf) as workaround.
 
@@ -363,4 +373,4 @@ Fixed column use `z-index` to make it over other columns. You will find sometime
 
 ### How to custom render Table Checkbox（For example, adding Tooltip）?
 
-Since `4.1.0`, You can use [`rowSelection.renderCell`](https://ant.design/components/table/#rowSelection) to custom render Table Checkbox. If you want to add Tooltip, please refer to this [demo](https://codesandbox.io/s/table-row-tooltip-v79j2v).
+Since `4.1.0`, You can use [`rowSelection.renderCell`](https://ant.design/components/table/#rowselection) to custom render Table Checkbox. If you want to add Tooltip, please refer to this [demo](https://codesandbox.io/s/table-row-tooltip-v79j2v).

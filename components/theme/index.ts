@@ -1,8 +1,12 @@
+'use client';
+
 /* eslint-disable import/prefer-default-export */
+import getDesignToken from './getDesignToken';
+import type { GlobalToken, MappingAlgorithm } from './interface';
 import { defaultConfig, useToken as useInternalToken } from './internal';
-import defaultAlgorithm from './themes/default';
-import darkAlgorithm from './themes/dark';
 import compactAlgorithm from './themes/compact';
+import darkAlgorithm from './themes/dark';
+import defaultAlgorithm from './themes/default';
 
 // ZombieJ: We export as object to user but array in internal.
 // This is used to minimize the bundle size for antd package but safe to refactor as object also.
@@ -13,6 +17,8 @@ function useToken() {
 
   return { theme, token, hashId };
 }
+
+export type { GlobalToken, MappingAlgorithm };
 
 export default {
   /** @private Test Usage. Do not use in production. */
@@ -25,4 +31,5 @@ export default {
   defaultAlgorithm,
   darkAlgorithm,
   compactAlgorithm,
+  getDesignToken,
 };

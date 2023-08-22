@@ -2,7 +2,8 @@
 category: Components
 group: Layout
 title: Grid
-cover: https://gw.alipayobjects.com/zos/alicdn/5rWLU27so/Grid.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*mfJeS6cqZrEAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*DLUwQ4B2_zQAAAAAAAAAAAAADrJ8AQ/original
 ---
 
 24 Grids System.
@@ -50,6 +51,8 @@ Layout uses a 24 grid layout to define the width of each "box", but does not rig
 
 ## API
 
+Common props ref：[Common props](/docs/react/common-props)
+
 If the Ant Design grid layout component does not meet your needs, you can use the excellent layout components of the community:
 
 - [react-flexbox-grid](http://roylee0704.github.io/react-flexbox-grid/)
@@ -81,11 +84,10 @@ If the Ant Design grid layout component does not meet your needs, you can use th
 | xl | `screen ≥ 1200px`, could be a `span` value or an object containing above props | number \| object | - |  |
 | xxl | `screen ≥ 1600px`, could be a `span` value or an object containing above props | number \| object | - |  |
 
+You can modify the breakpoints values using by modifying `screen[XS|SM|MD|LG|XL|XXL]` with [theme customization](/docs/react/customize-theme) (since 5.1.0, [sandbox demo](https://codesandbox.io/s/antd-reproduction-template-forked-dlq3r9?file=/index.js)).
+
 The breakpoints of responsive grid follow [BootStrap 4 media queries rules](https://getbootstrap.com/docs/4.0/layout/overview/#responsive-breakpoints) (not including `occasionally part`).
 
-<style>
-  [data-theme="dark"] #components-grid-demo-playground pre {
-    background: rgba(255,255,255,0.8);
-    color: rgba(255,255,255,.65);
-  }
-</style>
+## Design Token
+
+<ComponentTokenTable component="Grid"></ComponentTokenTable>

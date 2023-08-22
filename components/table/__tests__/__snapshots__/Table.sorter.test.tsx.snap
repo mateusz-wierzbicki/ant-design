@@ -1,13 +1,38 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Table.sorter renders custome sort icon correctly 1`] = `
+<span
+  class="customize-icon"
+>
+  sortAscend
+</span>
+`;
+
+exports[`Table.sorter renders custome sort icon correctly 2`] = `
+<span
+  class="customize-icon"
+>
+  sortDescend
+</span>
+`;
+
+exports[`Table.sorter renders custome sort icon correctly 3`] = `
+<span
+  class="customize-icon"
+>
+  unsorted
+</span>
+`;
+
 exports[`Table.sorter renders sorter icon correctly 1`] = `
 <thead
   class="ant-table-thead"
 >
   <tr>
     <th
-      aria-label="this column's title is Name,this column is sortable"
+      aria-label="Name"
       class="ant-table-cell ant-table-column-has-sorters"
+      scope="col"
       tabindex="0"
     >
       <div
@@ -22,12 +47,13 @@ exports[`Table.sorter renders sorter icon correctly 1`] = `
           class="ant-table-column-sorter ant-table-column-sorter-full"
         >
           <span
+            aria-hidden="true"
             class="ant-table-column-sorter-inner"
           >
             <span
               aria-label="caret-up"
               class="anticon anticon-caret-up ant-table-column-sorter-up"
-              role="presentation"
+              role="img"
             >
               <svg
                 aria-hidden="true"
@@ -46,7 +72,7 @@ exports[`Table.sorter renders sorter icon correctly 1`] = `
             <span
               aria-label="caret-down"
               class="anticon anticon-caret-down ant-table-column-sorter-down"
-              role="presentation"
+              role="img"
             >
               <svg
                 aria-hidden="true"
@@ -100,6 +126,7 @@ exports[`Table.sorter should support defaultOrder in Column 1`] = `
                   <th
                     aria-sort="ascending"
                     class="ant-table-cell ant-table-column-sort ant-table-column-has-sorters"
+                    scope="col"
                     tabindex="0"
                   >
                     <div
@@ -114,12 +141,13 @@ exports[`Table.sorter should support defaultOrder in Column 1`] = `
                         class="ant-table-column-sorter ant-table-column-sorter-full"
                       >
                         <span
+                          aria-hidden="true"
                           class="ant-table-column-sorter-inner"
                         >
                           <span
                             aria-label="caret-up"
                             class="anticon anticon-caret-up ant-table-column-sorter-up active"
-                            role="presentation"
+                            role="img"
                           >
                             <svg
                               aria-hidden="true"
@@ -138,7 +166,7 @@ exports[`Table.sorter should support defaultOrder in Column 1`] = `
                           <span
                             aria-label="caret-down"
                             class="anticon anticon-caret-down ant-table-column-sorter-down"
-                            role="presentation"
+                            role="img"
                           >
                             <svg
                               aria-hidden="true"

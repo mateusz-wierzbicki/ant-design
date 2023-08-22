@@ -1,3 +1,5 @@
+'use client';
+
 import CheckCircleFilled from '@ant-design/icons/CheckCircleFilled';
 import CloseCircleFilled from '@ant-design/icons/CloseCircleFilled';
 import ExclamationCircleFilled from '@ant-design/icons/ExclamationCircleFilled';
@@ -5,8 +7,8 @@ import WarningFilled from '@ant-design/icons/WarningFilled';
 import classNames from 'classnames';
 import * as React from 'react';
 
-import { ConfigContext } from '../config-provider';
 import warning from '../_util/warning';
+import { ConfigContext } from '../config-provider';
 
 import noFound from './noFound';
 import serverError from './serverError';
@@ -38,6 +40,7 @@ export interface ResultProps {
   extra?: React.ReactNode;
   prefixCls?: string;
   className?: string;
+  rootClassName?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }
@@ -108,6 +111,7 @@ export interface ResultType extends React.FC<ResultProps> {
 const Result: ResultType = ({
   prefixCls: customizePrefixCls,
   className: customizeClassName,
+  rootClassName,
   subTitle,
   title,
   style,
@@ -116,7 +120,7 @@ const Result: ResultType = ({
   icon,
   extra,
 }) => {
-  const { getPrefixCls, direction } = React.useContext(ConfigContext);
+  const { getPrefixCls, direction, result } = React.useContext(ConfigContext);
 
   const prefixCls = getPrefixCls('result', customizePrefixCls);
 
@@ -127,12 +131,16 @@ const Result: ResultType = ({
     prefixCls,
     `${prefixCls}-${status}`,
     customizeClassName,
+    result?.className,
+    rootClassName,
     { [`${prefixCls}-rtl`]: direction === 'rtl' },
     hashId,
   );
 
+  const mergedStyle: React.CSSProperties = { ...result?.style, ...style };
+
   return wrapSSR(
-    <div className={className} style={style}>
+    <div className={className} style={mergedStyle}>
       <Icon prefixCls={prefixCls} status={status} icon={icon} />
       <div className={`${prefixCls}-title`}>{title}</div>
       {subTitle && <div className={`${prefixCls}-subtitle`}>{subTitle}</div>}
@@ -145,5 +153,9 @@ const Result: ResultType = ({
 Result.PRESENTED_IMAGE_403 = ExceptionMap['403'];
 Result.PRESENTED_IMAGE_404 = ExceptionMap['404'];
 Result.PRESENTED_IMAGE_500 = ExceptionMap['500'];
+
+if (process.env.NODE_ENV !== 'production') {
+  Result.displayName = 'Result';
+}
 
 export default Result;

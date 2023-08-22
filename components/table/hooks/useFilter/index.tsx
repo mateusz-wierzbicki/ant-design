@@ -1,7 +1,6 @@
 import * as React from 'react';
 import warning from '../../../_util/warning';
 import type {
-  ColumnFilterItem,
   ColumnsType,
   ColumnTitleProps,
   ColumnType,
@@ -13,7 +12,7 @@ import type {
   TransformColumns,
 } from '../../interface';
 import { getColumnKey, getColumnPos, renderColumnTitle } from '../../util';
-import FilterDropdown from './FilterDropdown';
+import FilterDropdown, { flattenKeys } from './FilterDropdown';
 
 export interface FilterState<RecordType> {
   column: ColumnType<RecordType>;
@@ -71,9 +70,9 @@ function injectFilter<RecordType>(
   dropdownPrefixCls: string,
   columns: ColumnsType<RecordType>,
   filterStates: FilterState<RecordType>[],
-  triggerFilter: (filterState: FilterState<RecordType>) => void,
-  getPopupContainer: GetPopupContainer | undefined,
   locale: TableLocale,
+  triggerFilter: (filterState: FilterState<RecordType>) => void,
+  getPopupContainer?: GetPopupContainer,
   pos?: string,
 ): ColumnsType<RecordType> {
   return columns.map((column, index) => {
@@ -117,9 +116,9 @@ function injectFilter<RecordType>(
           dropdownPrefixCls,
           newColumn.children,
           filterStates,
+          locale,
           triggerFilter,
           getPopupContainer,
-          locale,
           columnPos,
         ),
       };
@@ -127,17 +126,6 @@ function injectFilter<RecordType>(
 
     return newColumn;
   });
-}
-
-export function flattenKeys(filters?: ColumnFilterItem[]) {
-  let keys: FilterValue = [];
-  (filters || []).forEach(({ value, children }) => {
-    keys.push(value);
-    if (children) {
-      keys = [...keys, ...flattenKeys(children)];
-    }
-  });
-  return keys;
 }
 
 function generateFilterInfo<RecordType>(filterStates: FilterState<RecordType>[]) {
@@ -193,10 +181,20 @@ interface FilterConfig<RecordType> {
   getPopupContainer?: GetPopupContainer;
 }
 
+const getMergedColumns = <RecordType extends unknown>(
+  rawMergedColumns: ColumnsType<RecordType>,
+): ColumnsType<RecordType> =>
+  rawMergedColumns.flatMap((column) => {
+    if ('children' in column) {
+      return [column, ...getMergedColumns(column.children || [])];
+    }
+    return [column];
+  });
+
 function useFilter<RecordType>({
   prefixCls,
   dropdownPrefixCls,
-  mergedColumns,
+  mergedColumns: rawMergedColumns,
   onFilterChange,
   getPopupContainer,
   locale: tableLocale,
@@ -205,12 +203,20 @@ function useFilter<RecordType>({
   FilterState<RecordType>[],
   Record<string, FilterValue | null>,
 ] {
+  const mergedColumns = React.useMemo(
+    () => getMergedColumns(rawMergedColumns || []),
+    [rawMergedColumns],
+  );
+
   const [filterStates, setFilterStates] = React.useState<FilterState<RecordType>[]>(() =>
     collectFilterStates(mergedColumns, true),
   );
 
   const mergedFilterStates = React.useMemo(() => {
     const collectedStates = collectFilterStates(mergedColumns, false);
+    if (collectedStates.length === 0) {
+      return collectedStates;
+    }
     let filteredKeysIsAllNotControlled = true;
     let filteredKeysIsAllControlled = true;
     collectedStates.forEach(({ filteredKeys }) => {
@@ -223,7 +229,23 @@ function useFilter<RecordType>({
 
     // Return if not controlled
     if (filteredKeysIsAllNotControlled) {
-      return filterStates;
+      // Filter column may have been removed
+      const keyList = (mergedColumns || []).map((column, index) =>
+        getColumnKey(column, getColumnPos(index)),
+      );
+      return filterStates
+        .filter(({ key }) => keyList.includes(key))
+        .map((item) => {
+          const col = mergedColumns[keyList.findIndex((key) => key === item.key)];
+          return {
+            ...item,
+            column: {
+              ...item.column,
+              ...col,
+            },
+            forceFiltered: col.filtered,
+          };
+        });
     }
 
     warning(
@@ -250,12 +272,14 @@ function useFilter<RecordType>({
       dropdownPrefixCls,
       innerColumns,
       mergedFilterStates,
+      tableLocale,
       triggerFilter,
       getPopupContainer,
-      tableLocale,
     );
 
   return [transformColumns, mergedFilterStates, filters];
 }
+
+export { flattenKeys };
 
 export default useFilter;

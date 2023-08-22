@@ -5,6 +5,7 @@ import Drawer from '..';
 import mountTest from '../../../tests/shared/mountTest';
 import rtlTest from '../../../tests/shared/rtlTest';
 import { fireEvent, render } from '../../../tests/utils';
+import { resetWarned } from '../../_util/warning';
 import ConfigProvider from '../../config-provider';
 
 const DrawerTest: React.FC<DrawerProps> = ({ getContainer }) => (
@@ -127,7 +128,7 @@ describe('Drawer', () => {
   });
 
   it('style/drawerStyle/headerStyle/bodyStyle should work', () => {
-    const style = {
+    const style: React.CSSProperties = {
       backgroundColor: '#08c',
     };
     const { container: wrapper } = render(
@@ -206,6 +207,107 @@ describe('Drawer', () => {
     const { container } = render(<Drawer getContainer={false} open zIndex={903} />);
     expect(container.querySelector('.ant-drawer')).toHaveStyle({
       zIndex: 903,
+    });
+  });
+
+  describe('style migrate', () => {
+    it('not warning with getContainer', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      resetWarned();
+
+      render(<Drawer getContainer={() => document.body} />);
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      errorSpy.mockRestore();
+    });
+
+    it('not warning with getContainer false', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      resetWarned();
+
+      render(<Drawer getContainer={false} />);
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      errorSpy.mockRestore();
+    });
+
+    it('warning with getContainer & style', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      resetWarned();
+
+      render(<Drawer getContainer={false} style={{ position: 'absolute' }} />);
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Warning: [antd: Drawer] `style` is replaced by `rootStyle` in v5. Please check that `position: absolute` is necessary.',
+      );
+
+      errorSpy.mockRestore();
+    });
+
+    it('should hide close button when closeIcon is null or false', async () => {
+      const { baseElement, rerender } = render(
+        <Drawer open closeIcon={null}>
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.ant-drawer-close')).toBeNull();
+
+      rerender(
+        <Drawer open closeIcon={false}>
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.ant-drawer-close')).toBeNull();
+
+      rerender(
+        <Drawer open closeIcon={<span className="custom-close">Close</span>}>
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.custom-close')).not.toBeNull();
+
+      rerender(
+        <Drawer open closable={false} closeIcon={<span className="custom-close2">Close</span>}>
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.custom-close2')).toBeNull();
+
+      rerender(
+        <Drawer open closable closeIcon={<span className="custom-close3">Close</span>}>
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.custom-close3')).not.toBeNull();
+
+      rerender(
+        <Drawer open closeIcon={0} className="custom-drawer1">
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.custom-drawer1 .ant-drawer-close')).not.toBeNull();
+      expect(baseElement.querySelector('.custom-drawer1 .anticon-close')).toBeNull();
+
+      rerender(
+        <Drawer open closeIcon="" className="custom-drawer2">
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.custom-drawer2 .ant-drawer-close')).not.toBeNull();
+      expect(baseElement.querySelector('.custom-drawer2 .anticon-close')).toBeNull();
+
+      rerender(
+        <Drawer open closeIcon className="custom-drawer3">
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.custom-drawer3 .anticon-close')).not.toBeNull();
+
+      rerender(
+        <Drawer open closable>
+          Here is content of Drawer
+        </Drawer>,
+      );
+      expect(baseElement.querySelector('.anticon-close')).not.toBeNull();
     });
   });
 });

@@ -3,7 +3,8 @@ category: Components
 subtitle: 开关
 group: 数据录入
 title: Switch
-cover: https://gw.alipayobjects.com/zos/alicdn/zNdJQMhfm/Switch.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*rtArRpBNDZcAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*al07RK8SGf4AAAAAAAAAAAAADrJ8AQ/original
 demo:
   cols: 2
 ---
@@ -26,6 +27,8 @@ demo:
 
 ## API
 
+通用属性参考：[通用属性](/docs/react/common-props)
+
 | 参数 | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- |
 | autoFocus | 组件自动获取焦点 | boolean | false |
@@ -46,3 +49,7 @@ demo:
 | ------- | -------- |
 | blur()  | 移除焦点 |
 | focus() | 获取焦点 |
+
+## Design Token
+
+<ComponentTokenTable component="Switch"></ComponentTokenTable>

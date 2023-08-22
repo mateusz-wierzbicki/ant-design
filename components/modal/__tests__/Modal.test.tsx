@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { ModalProps } from '..';
 import Modal from '..';
 import mountTest from '../../../tests/shared/mountTest';
@@ -8,29 +8,21 @@ import { resetWarned } from '../../_util/warning';
 
 jest.mock('rc-util/lib/Portal');
 
-class ModalTester extends React.Component<ModalProps, { open: boolean }> {
-  state = { open: false };
-
-  componentDidMount() {
-    this.setState({ open: true }); // eslint-disable-line react/no-did-mount-set-state
-  }
-
-  container = React.createRef<HTMLDivElement>();
-
-  getContainer = () => this.container?.current!;
-
-  render() {
-    const { open } = this.state;
-    return (
-      <div>
-        <div ref={this.container} />
-        <Modal {...this.props} open={open} getContainer={this.getContainer}>
-          Here is content of Modal
-        </Modal>
-      </div>
-    );
-  }
-}
+const ModalTester: React.FC<ModalProps> = (props) => {
+  const [open, setOpen] = React.useState(false);
+  const container = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setOpen(true);
+  }, []);
+  return (
+    <div>
+      <div ref={container} />
+      <Modal {...props} open={open} getContainer={container.current!}>
+        Here is content of Modal
+      </Modal>
+    </div>
+  );
+};
 
 describe('Modal', () => {
   mountTest(Modal);
@@ -39,6 +31,13 @@ describe('Modal', () => {
   it('support closeIcon', () => {
     render(<Modal closeIcon={<a>closeIcon</a>} open />);
     expect(document.body.querySelectorAll('.ant-modal-root')[0]).toMatchSnapshot();
+  });
+
+  it('support hide close button when setting closeIcon to null or false', () => {
+    const { baseElement, rerender } = render(<Modal closeIcon={null} open />);
+    expect(baseElement.querySelector('.ant-modal-close')).toBeFalsy();
+    rerender(<Modal closeIcon={false} open />);
+    expect(baseElement.querySelector('.ant-modal-close')).toBeFalsy();
   });
 
   it('render correctly', () => {
@@ -126,7 +125,12 @@ describe('Modal', () => {
   });
 
   it('should not render footer if null', () => {
-    const { container } = render(<Modal footer={null} />);
-    expect(container.querySelector('.ant-modal-footer')).toBeFalsy();
+    render(<Modal open footer={null} />);
+    expect(document.querySelector('.ant-modal-footer')).toBeFalsy();
+  });
+
+  it('should render custom footer', () => {
+    render(<Modal open footer={<div className="custom-footer">footer</div>} />);
+    expect(document.querySelector('.custom-footer')).toBeTruthy();
   });
 });

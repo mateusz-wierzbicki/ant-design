@@ -3,7 +3,8 @@ category: Components
 group: 反馈
 title: Spin
 subtitle: 加载中
-cover: https://gw.alipayobjects.com/zos/alicdn/LBcJqCPRv/Spin.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*5mC5TomY4B0AAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*i43_ToFrL8YAAAAAAAAAAAAADrJ8AQ/original
 demo:
   cols: 2
 ---
@@ -27,6 +28,8 @@ demo:
 
 ## API
 
+通用属性参考：[通用属性](/docs/react/common-props)
+
 | 参数             | 说明                                         | 类型          | 默认值    |
 | ---------------- | -------------------------------------------- | ------------- | --------- |
 | delay            | 延迟显示加载效果的时间（防止闪烁）           | number (毫秒) | -         |
@@ -41,3 +44,7 @@ demo:
 - `Spin.setDefaultIndicator(indicator: ReactNode)`
 
   你可以自定义全局默认 Spin 的元素。
+
+## Design Token
+
+<ComponentTokenTable component="Spin"></ComponentTokenTable>

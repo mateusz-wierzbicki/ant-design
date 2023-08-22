@@ -1,9 +1,9 @@
 import classNames from 'classnames';
 import * as React from 'react';
+import warning from '../_util/warning';
 import { ConfigContext } from '../config-provider';
 import type { SizeType } from '../config-provider/SizeContext';
 import { useToken } from '../theme/internal';
-import warning from '../_util/warning';
 
 export interface ButtonGroupProps {
   size?: SizeType;
@@ -13,7 +13,7 @@ export interface ButtonGroupProps {
   children?: React.ReactNode;
 }
 
-export const GroupSizeContext = React.createContext<SizeType | undefined>(undefined);
+export const GroupSizeContext = React.createContext<SizeType>(undefined);
 
 const ButtonGroup: React.FC<ButtonGroupProps> = (props) => {
   const { getPrefixCls, direction } = React.useContext(ConfigContext);
@@ -21,12 +21,10 @@ const ButtonGroup: React.FC<ButtonGroupProps> = (props) => {
   const { prefixCls: customizePrefixCls, size, className, ...others } = props;
   const prefixCls = getPrefixCls('btn-group', customizePrefixCls);
 
-  // Here we only need hashId
   const [, , hashId] = useToken();
 
-  // large => lg
-  // small => sm
   let sizeCls = '';
+
   switch (size) {
     case 'large':
       sizeCls = 'lg';

@@ -2,7 +2,8 @@
 category: Components
 group: Data Entry
 title: Switch
-cover: https://gw.alipayobjects.com/zos/alicdn/zNdJQMhfm/Switch.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*rtArRpBNDZcAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*al07RK8SGf4AAAAAAAAAAAAADrJ8AQ/original
 demo:
   cols: 2
 ---
@@ -25,6 +26,8 @@ Switching Selector.
 
 ## API
 
+Common props ref：[Common props](/docs/react/common-props)
+
 | Property | Description | Type | Default |
 | --- | --- | --- | --- |
 | autoFocus | Whether get focus when component mounted | boolean | false |
@@ -45,3 +48,7 @@ Switching Selector.
 | ------- | ------------ |
 | blur()  | Remove focus |
 | focus() | Get focus    |
+
+## Design Token
+
+<ComponentTokenTable component="Switch"></ComponentTokenTable>

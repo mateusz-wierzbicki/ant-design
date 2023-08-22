@@ -1,19 +1,22 @@
+'use client';
+
 import CheckOutlined from '@ant-design/icons/CheckOutlined';
 import CloseOutlined from '@ant-design/icons/CloseOutlined';
 import classNames from 'classnames';
 import RcSteps from 'rc-steps';
 import type {
   ProgressDotRender,
-  StepIconRender,
   StepsProps as RcStepsProps,
+  StepIconRender,
 } from 'rc-steps/lib/Steps';
 import * as React from 'react';
-import Tooltip from '../tooltip';
 import { ConfigContext } from '../config-provider';
+import useSize from '../config-provider/hooks/useSize';
 import useBreakpoint from '../grid/hooks/useBreakpoint';
 import Progress from '../progress';
-import useLegacyItems from './useLegacyItems';
+import Tooltip from '../tooltip';
 import useStyle from './style';
+import useLegacyItems from './useLegacyItems';
 
 export interface StepProps {
   className?: string;
@@ -30,6 +33,7 @@ export interface StepProps {
 export interface StepsProps {
   type?: 'default' | 'navigation' | 'inline';
   className?: string;
+  rootClassName?: string;
   current?: number;
   direction?: 'horizontal' | 'vertical';
   iconPrefix?: string;
@@ -54,22 +58,26 @@ type CompoundedComponent = React.FC<StepsProps> & {
 const Steps: CompoundedComponent = (props) => {
   const {
     percent,
-    size,
+    size: customizeSize,
     className,
+    rootClassName,
     direction,
     items,
     responsive = true,
     current = 0,
     children,
+    style,
     ...restProps
   } = props;
   const { xs } = useBreakpoint(responsive);
-  const { getPrefixCls, direction: rtlDirection } = React.useContext(ConfigContext);
+  const { getPrefixCls, direction: rtlDirection, steps } = React.useContext(ConfigContext);
 
   const realDirectionValue = React.useMemo<RcStepsProps['direction']>(
     () => (responsive && xs ? 'vertical' : direction),
     [xs, direction],
   );
+
+  const size = useSize(customizeSize);
 
   const prefixCls = getPrefixCls('steps', props.prefixCls);
 
@@ -80,12 +88,16 @@ const Steps: CompoundedComponent = (props) => {
   const mergedItems = useLegacyItems(items, children);
   const mergedPercent = isInline ? undefined : percent;
 
+  const mergedStyle: React.CSSProperties = { ...steps?.style, ...style };
+
   const stepsClassName = classNames(
+    steps?.className,
     {
       [`${prefixCls}-rtl`]: rtlDirection === 'rtl',
       [`${prefixCls}-with-progress`]: mergedPercent !== undefined,
     },
     className,
+    rootClassName,
     hashId,
   );
   const icons = {
@@ -103,7 +115,7 @@ const Steps: CompoundedComponent = (props) => {
           <Progress
             type="circle"
             percent={mergedPercent}
-            width={progressWidth}
+            size={progressWidth}
             strokeWidth={4}
             format={() => null}
           />
@@ -121,6 +133,7 @@ const Steps: CompoundedComponent = (props) => {
     <RcSteps
       icons={icons}
       {...restProps}
+      style={mergedStyle}
       current={current}
       size={size}
       items={mergedItems}
@@ -135,5 +148,9 @@ const Steps: CompoundedComponent = (props) => {
 };
 
 Steps.Step = RcSteps.Step;
+
+if (process.env.NODE_ENV !== 'production') {
+  Steps.displayName = 'Steps';
+}
 
 export default Steps;

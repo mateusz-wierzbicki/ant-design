@@ -27,16 +27,19 @@ export interface ArgsProps {
   className?: string;
   readonly type?: IconType;
   onClick?: () => void;
-  closeIcon?: React.ReactNode;
+  closeIcon?: boolean | React.ReactNode;
   props?: DivProps;
+  role?: 'alert' | 'status';
 }
 
+type StaticFn = (args: ArgsProps) => void;
+
 export interface NotificationInstance {
-  success(args: ArgsProps): void;
-  error(args: ArgsProps): void;
-  info(args: ArgsProps): void;
-  warning(args: ArgsProps): void;
-  open(args: ArgsProps): void;
+  success: StaticFn;
+  error: StaticFn;
+  info: StaticFn;
+  warning: StaticFn;
+  open: StaticFn;
   destroy(key?: React.Key): void;
 }
 
@@ -45,7 +48,7 @@ export interface GlobalConfigProps {
   bottom?: number;
   duration?: number;
   prefixCls?: string;
-  getContainer?: () => HTMLElement;
+  getContainer?: () => HTMLElement | ShadowRoot;
   placement?: NotificationPlacement;
   closeIcon?: React.ReactNode;
   rtl?: boolean;
@@ -57,7 +60,8 @@ export interface NotificationConfig {
   top?: number;
   bottom?: number;
   prefixCls?: string;
-  getContainer?: () => HTMLElement;
+  getContainer?: () => HTMLElement | ShadowRoot;
+  placement?: NotificationPlacement;
   maxCount?: number;
   rtl?: boolean;
 }

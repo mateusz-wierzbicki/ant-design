@@ -7,28 +7,33 @@ import type { GenerateConfig } from 'rc-picker/lib/generate/index';
 import type { PickerMode } from 'rc-picker/lib/interface';
 import * as React from 'react';
 import { forwardRef, useContext, useImperativeHandle } from 'react';
-import { useCompactItemContext } from '../../space/Compact';
 import type { PickerProps, PickerTimeProps } from '.';
-import { Components, getTimeProps } from '.';
-import { ConfigContext } from '../../config-provider';
-import DisabledContext from '../../config-provider/DisabledContext';
-import SizeContext from '../../config-provider/SizeContext';
-import { FormItemInputContext } from '../../form/context';
-import LocaleReceiver from '../../locale-provider/LocaleReceiver';
 import type { InputStatus } from '../../_util/statusUtils';
 import { getMergedStatus, getStatusClassNames } from '../../_util/statusUtils';
 import warning from '../../_util/warning';
+import { ConfigContext } from '../../config-provider';
+import DisabledContext from '../../config-provider/DisabledContext';
+import useSize from '../../config-provider/hooks/useSize';
+import { FormItemInputContext } from '../../form/context';
+import { useLocale } from '../../locale';
+import { useCompactItemContext } from '../../space/Compact';
 import enUS from '../locale/en_US';
-import { getPlaceholder, transPlacement2DropdownAlign } from '../util';
-import type { CommonPickerMethods, DatePickRef, PickerComponentClass } from './interface';
-
 import useStyle from '../style';
+import {
+  getPlaceholder,
+  getTimeProps,
+  mergeAllowClear,
+  transPlacement2DropdownAlign,
+} from '../util';
+import Components from './Components';
+import type { CommonPickerMethods, DatePickRef, PickerComponentClass } from './interface';
 
 export default function generatePicker<DateType>(generateConfig: GenerateConfig<DateType>) {
   type CustomPickerProps = {
     status?: InputStatus;
     hashId?: string;
     popupClassName?: string;
+    rootClassName?: string;
   };
   type DatePickerProps = PickerProps<DateType> & CustomPickerProps;
   type TimePickerProps = PickerTimeProps<DateType> & CustomPickerProps;
@@ -37,12 +42,15 @@ export default function generatePicker<DateType>(generateConfig: GenerateConfig<
     picker?: PickerMode,
     displayName?: string,
   ) {
+    const consumerName = displayName === 'TimePicker' ? 'timePicker' : 'datePicker';
     const Picker = forwardRef<DatePickRef<DateType> | CommonPickerMethods, InnerPickerProps>(
       (props, ref) => {
         const {
           prefixCls: customizePrefixCls,
           getPopupContainer: customizeGetPopupContainer,
+          style,
           className,
+          rootClassName,
           size: customizeSize,
           bordered = true,
           placement,
@@ -51,10 +59,19 @@ export default function generatePicker<DateType>(generateConfig: GenerateConfig<
           dropdownClassName,
           disabled: customDisabled,
           status: customStatus,
+          clearIcon,
+          allowClear,
           ...restProps
         } = props;
 
-        const { getPrefixCls, direction, getPopupContainer } = useContext(ConfigContext);
+        const {
+          getPrefixCls,
+          direction,
+          getPopupContainer,
+          // Consume different styles according to different names
+          [consumerName]: consumerStyle,
+        } = useContext(ConfigContext);
+
         const prefixCls = getPrefixCls('picker', customizePrefixCls);
         const { compactSize, compactItemClassnames } = useCompactItemContext(prefixCls, direction);
         const innerRef = React.useRef<RCPicker<DateType>>(null);
@@ -102,8 +119,7 @@ export default function generatePicker<DateType>(generateConfig: GenerateConfig<
         }
 
         // ===================== Size =====================
-        const size = React.useContext(SizeContext);
-        const mergedSize = compactSize || customizeSize || size;
+        const mergedSize = useSize((ctx) => customizeSize ?? compactSize ?? ctx);
 
         // ===================== Disabled =====================
         const disabled = React.useContext(DisabledContext);
@@ -120,53 +136,55 @@ export default function generatePicker<DateType>(generateConfig: GenerateConfig<
           </>
         );
 
-        return wrapSSR(
-          <LocaleReceiver componentName="DatePicker" defaultLocale={enUS}>
-            {(contextLocale) => {
-              const locale = { ...contextLocale, ...props.locale };
+        const [contextLocale] = useLocale('DatePicker', enUS);
 
-              return (
-                <RCPicker<DateType>
-                  ref={innerRef}
-                  placeholder={getPlaceholder(mergedPicker, locale, placeholder)}
-                  suffixIcon={suffixNode}
-                  dropdownAlign={transPlacement2DropdownAlign(direction, placement)}
-                  clearIcon={<CloseCircleFilled />}
-                  prevIcon={<span className={`${prefixCls}-prev-icon`} />}
-                  nextIcon={<span className={`${prefixCls}-next-icon`} />}
-                  superPrevIcon={<span className={`${prefixCls}-super-prev-icon`} />}
-                  superNextIcon={<span className={`${prefixCls}-super-next-icon`} />}
-                  allowClear
-                  transitionName={`${rootPrefixCls}-slide-up`}
-                  {...additionalProps}
-                  {...restProps}
-                  {...additionalOverrideProps}
-                  locale={locale!.lang}
-                  className={classNames(
-                    {
-                      [`${prefixCls}-${mergedSize}`]: mergedSize,
-                      [`${prefixCls}-borderless`]: !bordered,
-                    },
-                    getStatusClassNames(
-                      prefixCls as string,
-                      getMergedStatus(contextStatus, customStatus),
-                      hasFeedback,
-                    ),
-                    hashId,
-                    compactItemClassnames,
-                    className,
-                  )}
-                  prefixCls={prefixCls}
-                  getPopupContainer={customizeGetPopupContainer || getPopupContainer}
-                  generateConfig={generateConfig}
-                  components={Components}
-                  direction={direction}
-                  disabled={mergedDisabled}
-                  dropdownClassName={classNames(hashId, popupClassName || dropdownClassName)}
-                />
-              );
-            }}
-          </LocaleReceiver>,
+        const locale = { ...contextLocale, ...props.locale! };
+
+        return wrapSSR(
+          <RCPicker<DateType>
+            ref={innerRef}
+            placeholder={getPlaceholder(locale, mergedPicker, placeholder)}
+            suffixIcon={suffixNode}
+            dropdownAlign={transPlacement2DropdownAlign(direction, placement)}
+            prevIcon={<span className={`${prefixCls}-prev-icon`} />}
+            nextIcon={<span className={`${prefixCls}-next-icon`} />}
+            superPrevIcon={<span className={`${prefixCls}-super-prev-icon`} />}
+            superNextIcon={<span className={`${prefixCls}-super-next-icon`} />}
+            transitionName={`${rootPrefixCls}-slide-up`}
+            {...additionalProps}
+            {...restProps}
+            {...additionalOverrideProps}
+            locale={locale!.lang}
+            className={classNames(
+              {
+                [`${prefixCls}-${mergedSize}`]: mergedSize,
+                [`${prefixCls}-borderless`]: !bordered,
+              },
+              getStatusClassNames(
+                prefixCls,
+                getMergedStatus(contextStatus, customStatus),
+                hasFeedback,
+              ),
+              hashId,
+              compactItemClassnames,
+              consumerStyle?.className,
+              className,
+              rootClassName,
+            )}
+            style={{ ...consumerStyle?.style, ...style }}
+            prefixCls={prefixCls}
+            getPopupContainer={customizeGetPopupContainer || getPopupContainer}
+            generateConfig={generateConfig}
+            components={Components}
+            direction={direction}
+            disabled={mergedDisabled}
+            dropdownClassName={classNames(
+              hashId,
+              rootClassName,
+              popupClassName || dropdownClassName,
+            )}
+            allowClear={mergeAllowClear(allowClear, clearIcon, <CloseCircleFilled />)}
+          />,
         );
       },
     );

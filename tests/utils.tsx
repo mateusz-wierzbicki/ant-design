@@ -1,12 +1,12 @@
+import type { RenderOptions } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import MockDate from 'mockdate';
+import { _rs as onEsResize } from 'rc-resize-observer/es/utils/observerUtil';
+import { _rs as onLibResize } from 'rc-resize-observer/lib/utils/observerUtil';
 import type { ReactElement } from 'react';
 import React, { StrictMode } from 'react';
-import type { RenderOptions } from '@testing-library/react';
-import { render, act } from '@testing-library/react';
-import { _rs as onLibResize } from 'rc-resize-observer/lib/utils/observerUtil';
-import { _rs as onEsResize } from 'rc-resize-observer/es/utils/observerUtil';
 
-export function assertsExist<T>(item: T | null | undefined): asserts item is T {
+export function assertsExist<T>(item?: T): asserts item is T {
   expect(item).not.toBeUndefined();
   expect(item).not.toBeNull();
 }
@@ -32,12 +32,10 @@ export const sleep = async (timeout = 0) => {
 const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
   render(ui, { wrapper: StrictMode, ...options });
 
-export * from '@testing-library/react';
-
 export function renderHook<T>(func: () => T): { result: React.RefObject<T> } {
   const result = React.createRef<T>();
 
-  const Demo = () => {
+  const Demo: React.FC = () => {
     (result as any).current = func();
 
     return null;
@@ -55,12 +53,12 @@ export function renderHook<T>(func: () => T): { result: React.RefObject<T> } {
  */
 const pureRender = render;
 
-export { customRender as render, pureRender };
+export { pureRender, customRender as render };
 
 export const triggerResize = (target: Element) => {
   const originGetBoundingClientRect = target.getBoundingClientRect;
 
-  target.getBoundingClientRect = () => ({ width: 510, height: 903 }) as DOMRect;
+  target.getBoundingClientRect = () => ({ width: 510, height: 903 } as DOMRect);
 
   act(() => {
     onLibResize([{ target } as ResizeObserverEntry]);

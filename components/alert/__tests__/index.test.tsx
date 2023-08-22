@@ -1,9 +1,10 @@
-import React from 'react';
 import userEvent from '@testing-library/user-event';
+import { resetWarned } from 'rc-util/lib/warning';
+import React from 'react';
 import Alert from '..';
 import accessibilityTest from '../../../tests/shared/accessibilityTest';
 import rtlTest from '../../../tests/shared/rtlTest';
-import { render, act, screen } from '../../../tests/utils';
+import { act, render, screen } from '../../../tests/utils';
 import Button from '../../button';
 import Popconfirm from '../../popconfirm';
 import Tooltip from '../../tooltip';
@@ -76,9 +77,8 @@ describe('Alert', () => {
   });
 
   it('should show error as ErrorBoundary when children have error', () => {
-    jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    // eslint-disable-next-line no-console
-    expect(console.error).toHaveBeenCalledTimes(0);
+    const warnSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    expect(warnSpy).toHaveBeenCalledTimes(0);
     // @ts-expect-error
     // eslint-disable-next-line react/jsx-no-undef
     const ThrowError = () => <NotExisted />;
@@ -91,8 +91,7 @@ describe('Alert', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'ReferenceError: NotExisted is not defined',
     );
-    // eslint-disable-next-line no-console
-    (console.error as any).mockRestore();
+    warnSpy.mockRestore();
   });
 
   it('could be used with Tooltip', async () => {
@@ -106,6 +105,10 @@ describe('Alert', () => {
     );
 
     await userEvent.hover(screen.getByRole('alert'));
+
+    act(() => {
+      jest.runAllTimers();
+    });
 
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
   });
@@ -121,6 +124,10 @@ describe('Alert', () => {
     );
     await userEvent.click(screen.getByRole('alert'));
 
+    act(() => {
+      jest.runAllTimers();
+    });
+
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
   });
 
@@ -134,5 +141,31 @@ describe('Alert', () => {
   it('should not render message div when no message', () => {
     const { container } = render(<Alert description="description" />);
     expect(!!container.querySelector('.ant-alert-message')).toBe(false);
+  });
+
+  it('close button should be hidden when closeIcon setting to null or false', () => {
+    const { container, rerender } = render(<Alert closeIcon={null} />);
+    expect(container.querySelector('.ant-alert-close-icon')).toBeFalsy();
+    rerender(<Alert closeIcon={false} />);
+    expect(container.querySelector('.ant-alert-close-icon')).toBeFalsy();
+    rerender(<Alert closeIcon />);
+    expect(container.querySelector('.ant-alert-close-icon')).toBeTruthy();
+    rerender(<Alert />);
+    expect(container.querySelector('.ant-alert-close-icon')).toBeFalsy();
+  });
+
+  it('should warning when using closeText', () => {
+    resetWarned();
+    const warnSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { container } = render(<Alert closeText="close" />);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      `Warning: [antd: Alert] \`closeText\` is deprecated. Please use \`closeIcon\` instead.`,
+    );
+
+    expect(container.querySelector('.ant-alert-close-icon')?.textContent).toBe('close');
+
+    warnSpy.mockRestore();
   });
 });

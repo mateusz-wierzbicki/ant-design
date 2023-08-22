@@ -1,8 +1,18 @@
+'use client';
+
+import type { CountdownProps } from './Countdown';
 import Countdown from './Countdown';
-import Statistic, { type StatisticProps } from './Statistic';
+import type { StatisticProps } from './Statistic';
+import Statistic from './Statistic';
 
-Statistic.Countdown = Countdown;
+export type { CountdownProps, StatisticProps };
 
-export type { StatisticProps };
+type CompoundedComponent = {
+  Countdown: typeof Countdown;
+};
 
-export default Statistic;
+export type CompoundedStatistic = typeof Statistic & CompoundedComponent;
+
+(Statistic as CompoundedStatistic).Countdown = Countdown;
+
+export default Statistic as CompoundedStatistic;

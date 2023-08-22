@@ -3,7 +3,8 @@ category: Components
 subtitle: 排版
 group: 通用
 title: Typography
-cover: https://gw.alipayobjects.com/zos/alicdn/GOM1KQ24O/Typography.svg
+cover: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*MLt3R6m9huoAAAAAAAAAAAAADrJ8AQ/original
+coverDark: https://mdn.alipayobjects.com/huamei_7uahnr/afts/img/A*LT2jR41Uj2EAAAAAAAAAAAAADrJ8AQ/original
 ---
 
 文本的基本格式。
@@ -25,8 +26,11 @@ cover: https://gw.alipayobjects.com/zos/alicdn/GOM1KQ24O/Typography.svg
 <code src="./demo/ellipsis-middle.tsx">省略中间</code>
 <code src="./demo/ellipsis-debug.tsx" debug>省略号 Debug</code>
 <code src="./demo/suffix.tsx">后缀</code>
+<code src="./demo/componentToken-debug.tsx" debug>组件 Token</code>
 
 ## API
+
+通用属性参考：[通用属性](/docs/react/common-props)
 
 ### Typography.Text
 
@@ -148,9 +152,13 @@ cover: https://gw.alipayobjects.com/zos/alicdn/GOM1KQ24O/Typography.svg
 | rows | 最多显示的行数 | number | - |  |
 | suffix | 自定义省略内容后缀 | string | - |  |
 | symbol | 自定义展开描述文案 | ReactNode | `展开` |  |
-| tooltip | 省略时，展示提示信息 | boolean \| ReactNode \| [TooltipProps](/components/tooltip/#API) | - | 4.11.0 |
+| tooltip | 省略时，展示提示信息 | boolean \| ReactNode \| [TooltipProps](/components/tooltip-cn/#api) | - | 4.11.0 |
 | onEllipsis | 触发省略时的回调 | function(ellipsis) | - | 4.2.0 |
 | onExpand | 点击展开时的回调 | function(event) | - |  |
+
+## Design Token
+
+<ComponentTokenTable component="Typography"></ComponentTokenTable>
 
 ## FAQ
 

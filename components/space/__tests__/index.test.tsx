@@ -181,7 +181,7 @@ describe('Space', () => {
 
   // https://github.com/ant-design/ant-design/issues/35305
   it('should not throw duplicated key warning', () => {
-    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     render(
       <Space>
         <div key="1" />
@@ -190,11 +190,66 @@ describe('Space', () => {
         <div />
       </Space>,
     );
-    expect(console.error).not.toHaveBeenCalledWith(
+    expect(spy).not.toHaveBeenCalledWith(
       expect.stringContaining('Encountered two children with the same key'),
       expect.anything(),
       expect.anything(),
     );
-    (console.error as any).mockRestore();
+    spy.mockRestore();
+  });
+
+  it('should render the hidden empty item wrapper', () => {
+    const Null = () => null;
+    const { container } = render(
+      <Space>
+        <Null />
+      </Space>,
+    );
+    const item = container.querySelector('div.ant-space-item') as HTMLElement;
+
+    expect(item).toBeEmptyDOMElement();
+    expect(getComputedStyle(item).display).toBe('none');
+  });
+
+  it('should ref work', () => {
+    const ref = React.createRef<HTMLDivElement>();
+    const { container } = render(
+      <Space ref={ref}>
+        <span>Text1</span>
+        <span>Text2</span>
+      </Space>,
+    );
+
+    expect(ref.current).toBe(container.firstChild);
+  });
+
+  it('should classNames work', () => {
+    const { container } = render(
+      <Space classNames={{ item: 'test-classNames' }}>
+        <span>Text1</span>
+        <span>Text2</span>
+      </Space>,
+    );
+
+    expect(container.querySelector('.ant-space-item.test-classNames')).toBeTruthy();
+  });
+
+  it('should styles work', () => {
+    const { container } = render(
+      <Space
+        styles={{
+          item: {
+            color: 'red',
+          },
+        }}
+      >
+        <span>Text1</span>
+        <span>Text2</span>
+      </Space>,
+    );
+
+    expect(container.querySelector('.ant-space-item')?.getAttribute('style')).toEqual(
+      'margin-right: 8px; color: red;',
+    );
   });
 });
