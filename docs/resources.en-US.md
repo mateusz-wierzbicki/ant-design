@@ -81,7 +81,7 @@ Please find below some of the design resources and tools about Ant Design that w
 - AntBlocks UI
   - https://uploads-ssl.webflow.com/64dc925e7cb893427a5c9cdc/64e4610f7818dcc7501057ad_antblocks-ui-card-img.svg
   - High-quality, responsive, and customizable React components built on Ant Design
-  - https://antblocksui.com
+  - https://antblocksui.com/
 </ResourceCards>
 
 ## Articles
